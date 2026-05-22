@@ -21,9 +21,11 @@ function getSupabaseImagePattern() {
 
 const supabaseImagePattern = getSupabaseImagePattern()
 
+// todo: fix SSRF risk dangerouslyAllowLocalIP in production
 const nextConfig = {
   images: {
     remotePatterns: supabaseImagePattern ? [supabaseImagePattern] : [],
+    dangerouslyAllowLocalIP: true,
   },
 }
 
