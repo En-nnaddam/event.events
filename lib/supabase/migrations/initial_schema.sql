@@ -331,3 +331,81 @@ create index events_starts_at_idx on public.events(starts_at);
 create index events_cta_type_idx on public.events(cta_type);
 
 create index news_slug_idx on public.news(slug);
+
+
+-- =========================================
+-- STORAGE: EVENT IMAGES
+-- =========================================
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+values (
+  'event-images',
+  'event-images',
+  true,
+  5242880,
+  array[
+    'image/gif',
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ]
+)
+on conflict (id) do update
+set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Anyone can read event images"
+on storage.objects;
+
+create policy "Anyone can read event images"
+on storage.objects
+for select
+using (bucket_id = 'event-images');
+
+drop policy if exists "Admins can upload event images"
+on storage.objects;
+
+create policy "Admins can upload event images"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'event-images'
+  and public.is_admin()
+);
+
+drop policy if exists "Admins can update event images"
+on storage.objects;
+
+create policy "Admins can update event images"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'event-images'
+  and public.is_admin()
+)
+with check (
+  bucket_id = 'event-images'
+  and public.is_admin()
+);
+
+drop policy if exists "Admins can delete event images"
+on storage.objects;
+
+create policy "Admins can delete event images"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'event-images'
+  and public.is_admin()
+);

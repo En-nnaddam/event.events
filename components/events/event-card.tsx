@@ -1,6 +1,10 @@
-import { cn } from "@/lib/utils"
+"use client"
 
-type EventCtaType = "external_link" | "whatsapp" | "phone" | "none"
+import Image from "next/image"
+import { useEffect, useMemo, useState } from "react"
+
+import { getEventCtaLabel, type EventCtaType } from "@/lib/admin/events"
+import { cn } from "@/lib/utils"
 
 export type EventFeedItem = {
   id: string
@@ -51,7 +55,7 @@ function getCta(event: EventFeedItem) {
   if (event.cta_type === "external_link" && event.cta_url) {
     return {
       href: event.cta_url,
-      label: event.cta_label || "Open event link",
+      label: event.cta_label || getEventCtaLabel(event.cta_type),
     }
   }
 
@@ -60,28 +64,40 @@ function getCta(event: EventFeedItem) {
 
     return {
       href: `https://wa.me/${phone}`,
-      label: event.cta_label || "Contact on WhatsApp",
+      label: event.cta_label || getEventCtaLabel(event.cta_type),
     }
   }
 
   if (event.cta_type === "phone" && event.cta_phone) {
     return {
       href: `tel:${event.cta_phone}`,
-      label: event.cta_label || event.cta_phone,
+      label: event.cta_label || getEventCtaLabel(event.cta_type),
     }
   }
 
   return null
 }
 
-function EventImage({
-  src,
-  title,
-  className,
-}: {
-  src: string | null
+type EventImageItem = {
+  alt: string
+  src: string
   title: string
+}
+
+function EventImage({
+  alt,
+  src,
+  className,
+  onOpen,
+  sizes,
+  title,
+}: {
+  alt: string
+  src: string | null
   className?: string
+  onOpen?: () => void
+  sizes: string
+  title: string
 }) {
   if (!src) {
     return (
@@ -97,32 +113,246 @@ function EventImage({
   }
 
   return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
+        className
+      )}
+      aria-label={`Open ${title}`}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={sizes}
+        className="object-cover transition duration-200 group-hover:scale-[1.03]"
+      />
+    </button>
+  )
+}
+
+function ImageModal({
+  activeIndex,
+  images,
+  loadedImageSrcs,
+  onClose,
+  onImageLoad,
+  onSelect,
+}: {
+  activeIndex: number
+  images: EventImageItem[]
+  loadedImageSrcs: Set<string>
+  onClose: () => void
+  onImageLoad: (src: string) => void
+  onSelect: (index: number) => void
+}) {
+  const activeImage = images[activeIndex]
+  const hasMultipleImages = images.length > 1
+  const isActiveImageLoaded = activeImage ? loadedImageSrcs.has(activeImage.src) : false
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose()
+      }
+
+      if (event.key === "ArrowLeft" && hasMultipleImages) {
+        onSelect((activeIndex - 1 + images.length) % images.length)
+      }
+
+      if (event.key === "ArrowRight" && hasMultipleImages) {
+        onSelect((activeIndex + 1) % images.length)
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [activeIndex, hasMultipleImages, images.length, onClose, onSelect])
+
+  useEffect(() => {
+    if (!activeImage) {
+      return
+    }
+
+    const preloadIndexes = hasMultipleImages
+      ? [activeIndex, (activeIndex - 1 + images.length) % images.length, (activeIndex + 1) % images.length]
+      : [activeIndex]
+
+    preloadIndexes.forEach((index) => {
+      const image = images[index]
+
+      if (!image || loadedImageSrcs.has(image.src)) {
+        return
+      }
+
+      const preloadImage = new window.Image()
+      preloadImage.src = image.src
+    })
+  }, [activeImage, activeIndex, hasMultipleImages, images, loadedImageSrcs])
+
+  if (!activeImage) {
+    return null
+  }
+
+  return (
     <div
-      aria-label={title}
-      role="img"
-      className={cn("min-h-56 rounded-lg bg-cover bg-center", className)}
-      style={{ backgroundImage: `url("${src}")` }}
-    />
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${activeImage.title} image preview`}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose()
+        }
+      }}
+    >
+      <div className="grid max-h-full w-full max-w-6xl gap-3">
+        <div className="flex items-center justify-between gap-3 text-white">
+          <p className="min-w-0 truncate text-sm font-medium">
+            {activeImage.title}
+            {hasMultipleImages ? ` (${activeIndex + 1} of ${images.length})` : ""}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+            aria-label="Close image preview"
+          >
+            X
+          </button>
+        </div>
+
+        <div className="relative h-[72vh] min-h-80 overflow-hidden rounded-lg bg-black">
+          <Image
+            src={activeImage.src}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 80vw, 24vw"
+            className={cn(
+              "object-cover opacity-45 blur-2xl scale-110 transition-opacity duration-300",
+              isActiveImageLoaded ? "opacity-0" : "opacity-45"
+            )}
+            aria-hidden="true"
+          />
+
+          {!isActiveImageLoaded ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/25">
+              <div className="flex items-center gap-3 rounded-md bg-black/60 px-4 py-3 text-sm font-medium text-white shadow-sm">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <span>Loading image</span>
+              </div>
+              <span className="sr-only">Loading image</span>
+            </div>
+          ) : null}
+
+          <Image
+            src={activeImage.src}
+            alt={activeImage.alt}
+            fill
+            sizes="100vw"
+            className={cn(
+              "object-contain transition-opacity duration-300",
+              isActiveImageLoaded ? "opacity-100" : "opacity-0"
+            )}
+            priority
+            onLoad={() => onImageLoad(activeImage.src)}
+          />
+
+          {hasMultipleImages ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onSelect((activeIndex - 1 + images.length) % images.length)}
+                className="absolute left-3 top-1/2 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+                aria-label="Show previous image"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelect((activeIndex + 1) % images.length)}
+                className="absolute right-3 top-1/2 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+                aria-label="Show next image"
+              >
+                Next
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
   )
 }
 
 export function EventCard({ event }: { event: EventFeedItem }) {
   const cta = getCta(event)
   const galleryImages = event.images.filter((image) => image && image !== event.cover_image_url)
+  const imageItems = useMemo<EventImageItem[]>(() => {
+    const coverImage = event.cover_image_url
+      ? [
+          {
+            alt: `${event.title} cover image`,
+            src: event.cover_image_url,
+            title: `${event.title} cover image`,
+          },
+        ]
+      : []
+
+    return [
+      ...coverImage,
+      ...galleryImages.map((image, index) => ({
+        alt: `${event.title} gallery image ${index + 1}`,
+        src: image,
+        title: `${event.title} gallery image ${index + 1}`,
+      })),
+    ]
+  }, [event.cover_image_url, event.title, galleryImages])
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null)
+  const [loadedModalImageSrcs, setLoadedModalImageSrcs] = useState<Set<string>>(() => new Set())
+
+  function markModalImageLoaded(src: string) {
+    setLoadedModalImageSrcs((currentSrcs) => {
+      if (currentSrcs.has(src)) {
+        return currentSrcs
+      }
+
+      const nextSrcs = new Set(currentSrcs)
+      nextSrcs.add(src)
+      return nextSrcs
+    })
+  }
 
   return (
-    <article className="grid gap-5 rounded-lg border border-border bg-card p-4 shadow-sm md:grid-cols-[minmax(220px,0.42fr)_1fr] md:p-5">
-      <div className="grid gap-3">
-        <EventImage src={event.cover_image_url} title={event.title} />
+    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm md:grid-cols-[minmax(220px,0.42fr)_1fr] md:p-5">
+      <div className="grid min-w-0 gap-3">
+        <EventImage
+          alt={`${event.title} cover image`}
+          src={event.cover_image_url}
+          title={`${event.title} cover image`}
+          sizes="(max-width: 768px) calc(100vw - 2rem), 38vw"
+          className="aspect-video min-h-0 md:aspect-auto md:min-h-56"
+          onOpen={event.cover_image_url ? () => setActiveImageIndex(0) : undefined}
+        />
 
         {galleryImages.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2">
-            {galleryImages.slice(0, 3).map((image) => (
+          <div className="flex min-w-0 max-w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-1">
+            {galleryImages.map((image, index) => (
               <EventImage
                 key={image}
+                alt={`${event.title} gallery image ${index + 1}`}
                 src={image}
-                title={`${event.title} gallery image`}
-                className="min-h-20 rounded-md"
+                title={`${event.title} gallery image ${index + 1}`}
+                sizes="9rem"
+                className="h-24 min-h-24 w-36 shrink-0 snap-start rounded-md"
+                onOpen={() => setActiveImageIndex(event.cover_image_url ? index + 1 : index)}
               />
             ))}
           </div>
@@ -137,7 +367,6 @@ export function EventCard({ event }: { event: EventFeedItem }) {
             </span>
           ) : null}
           <span className="rounded-md bg-muted px-2 py-1">{event.city}</span>
-          <span className="rounded-md bg-muted px-2 py-1">Published</span>
         </div>
 
         <div>
@@ -149,30 +378,21 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           ) : null}
         </div>
 
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+        <dl className="grid gap-3 text-sm md:grid-cols-2">
           <div className="rounded-md border border-border bg-background p-3">
             <dt className="font-medium text-foreground">Date</dt>
-            <dd className="mt-1 leading-5 text-muted-foreground">{formatDateRange(event)}</dd>
+            <dd className="mt-1 break-words leading-5 text-muted-foreground [overflow-wrap:anywhere]">
+              {formatDateRange(event)}
+            </dd>
           </div>
 
           <div className="rounded-md border border-border bg-background p-3">
             <dt className="font-medium text-foreground">Place</dt>
-            <dd className="mt-1 leading-5 text-muted-foreground">
+            <dd className="mt-1 break-words leading-5 text-muted-foreground [overflow-wrap:anywhere]">
               {event.location ? `${event.location}, ${event.city}` : event.city}
             </dd>
           </div>
 
-          <div className="rounded-md border border-border bg-background p-3">
-            <dt className="font-medium text-foreground">Event slug</dt>
-            <dd className="mt-1 break-words text-muted-foreground">{event.slug}</dd>
-          </div>
-
-          <div className="rounded-md border border-border bg-background p-3">
-            <dt className="font-medium text-foreground">Contact</dt>
-            <dd className="mt-1 break-words text-muted-foreground">
-              {event.cta_phone || event.cta_url || "No contact added"}
-            </dd>
-          </div>
         </dl>
 
         {cta ? (
@@ -181,13 +401,24 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               href={cta.href}
               target={event.cta_type === "external_link" || event.cta_type === "whatsapp" ? "_blank" : undefined}
               rel={event.cta_type === "external_link" || event.cta_type === "whatsapp" ? "noreferrer" : undefined}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
             >
               {cta.label}
             </a>
           </div>
         ) : null}
       </div>
+
+      {activeImageIndex !== null ? (
+        <ImageModal
+          activeIndex={activeImageIndex}
+          images={imageItems}
+          loadedImageSrcs={loadedModalImageSrcs}
+          onClose={() => setActiveImageIndex(null)}
+          onImageLoad={markModalImageLoaded}
+          onSelect={setActiveImageIndex}
+        />
+      ) : null}
     </article>
   )
 }
