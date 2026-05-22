@@ -38,7 +38,7 @@ const errorMessages: Record<string, string> = {
   image_optimization_failed: "One or more images could not be optimized.",
   invalid_date: "Use valid event dates.",
   invalid_date_range: "The end date must be after the start date.",
-  invalid_image_type: "Upload PNG, JPG, WebP, or GIF images only.",
+  invalid_image_type: "Upload PNG, JPG, or WebP images only.",
   missing_cta_phone: "Phone and WhatsApp CTAs require a phone number.",
   missing_cta_url: "External link CTAs require a URL.",
   missing_event: "The selected event could not be found.",

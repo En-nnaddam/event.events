@@ -27,7 +27,7 @@ type SelectedImage = {
   url: string
 }
 
-const defaultAccept = "image/png,image/jpeg,image/webp,image/gif"
+const defaultAccept = "image/png,image/jpeg,image/webp"
 
 function formatFileSize(size: number) {
   if (size < 1024 * 1024) {
@@ -244,7 +244,7 @@ export function ImageSelector({
       ) : (
         <div className="rounded-lg border border-border bg-muted/35 p-6 text-center">
           <p className="text-sm font-medium">No image selected</p>
-          <p className="mt-1 text-sm text-muted-foreground">PNG, JPG, WebP, or GIF up to 5MB.</p>
+          <p className="mt-1 text-sm text-muted-foreground">PNG, JPG, or WebP up to 5MB.</p>
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import { MAX_EVENT_IMAGE_SIZE } from "@/lib/admin/events"
 
-const allowedImageTypes = ["image/gif", "image/jpeg", "image/png", "image/webp"]
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"]
 
 export type OptimizedImage = {
   file: File

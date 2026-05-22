@@ -350,7 +350,6 @@ values (
   true,
   5242880,
   array[
-    'image/gif',
     'image/jpeg',
     'image/png',
     'image/webp'
