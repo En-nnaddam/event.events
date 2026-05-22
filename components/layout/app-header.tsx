@@ -29,14 +29,9 @@ export async function AppHeader() {
               <LogoutForm />
             </>
           ) : (
-            <>
-              <Link href="/auth" className={buttonVariants({ variant: "outline" })}>
-                User login
-              </Link>
-              <Link href="/admin/login" className={buttonVariants({ variant: "ghost" })}>
-                Admin login
-              </Link>
-            </>
+            <Link href="/auth" className={buttonVariants({ variant: "outline" })}>
+              Login
+            </Link>
           )}
         </nav>
       </div>
