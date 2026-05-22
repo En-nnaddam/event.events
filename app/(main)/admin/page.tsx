@@ -32,16 +32,16 @@ export default async function AdminPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/events"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-            >
-              Manage events
-            </Link>
-            <Link
               href="/admin/categories"
               className="inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
             >
               Manage categories
+            </Link>
+            <Link
+              href="/admin/events"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+            >
+              Manage events
             </Link>
           </div>
         </div>

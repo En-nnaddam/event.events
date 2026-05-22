@@ -55,7 +55,7 @@ export default async function ProfileSetupPage({ searchParams }: ProfileSetupPag
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-6">
-      <div className="grid w-full max-w-md gap-4">
+        <div className="grid w-full max-w-md gap-4">
         {error ? (
           <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
@@ -84,7 +84,7 @@ export default async function ProfileSetupPage({ searchParams }: ProfileSetupPag
             </Button>
           </form>
         </div>
-      </div>
+        </div>
     </main>
   )
 }

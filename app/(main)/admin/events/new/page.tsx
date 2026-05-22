@@ -28,7 +28,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
 
   return (
     <main className="min-h-svh bg-background p-6">
-      <section className="mx-auto max-w-4xl py-10">
+        <section className="mx-auto max-w-4xl py-10">
         <div className="mb-6">
           <Link href="/admin/events" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Events management
@@ -40,7 +40,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
         </div>
 
         <EventForm action={createEvent} categories={categories} cleanupAction={cleanupEventImages} error={params.error} />
-      </section>
+        </section>
     </main>
   )
 }

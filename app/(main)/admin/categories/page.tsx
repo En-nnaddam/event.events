@@ -118,7 +118,7 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
 
   return (
     <main className="min-h-svh bg-background p-6">
-      <section className="mx-auto max-w-5xl py-10">
+        <section className="mx-auto max-w-5xl py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -166,7 +166,7 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
             </div>
           )}
         </div>
-      </section>
+        </section>
     </main>
   )
 }

@@ -43,3 +43,26 @@ export async function startGoogleAuth() {
 
   redirect(data.url)
 }
+
+export async function signOutCurrentSession() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  let redirectTo = "/"
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle<{ role: "user" | "admin" }>()
+
+    if (profile?.role === "admin") {
+      redirectTo = "/admin/login"
+    }
+  }
+
+  await supabase.auth.signOut({ scope: "local" })
+  redirect(redirectTo)
+}
