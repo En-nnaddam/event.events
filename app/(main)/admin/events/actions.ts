@@ -8,6 +8,8 @@ import {
   EVENT_IMAGE_BUCKET,
   getEventCtaLabel,
   getStoragePathFromPublicUrl,
+  isEventImageStoragePath,
+  isUuid,
   slugify,
   type EventCtaType,
   type EventStatus,
@@ -29,6 +31,7 @@ type EventPayload = {
 }
 
 type EventActionResult = {
+  eventId?: string
   error?: string
   ok: boolean
 }
@@ -57,6 +60,19 @@ function fail(error: string): EventActionResult {
   return { ok: false, error }
 }
 
+function isDigitsOnly(value: string) {
+  return /^\d+$/.test(value)
+}
+
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === "http:" || url.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
 function parseEventPayload(formData: FormData): EventPayload | { error: string } {
   const title = getText(formData, "title")
   const slug = slugify(getText(formData, "slug") || title)
@@ -67,6 +83,10 @@ function parseEventPayload(formData: FormData): EventPayload | { error: string }
   const ctaType = getCtaType(getText(formData, "cta_type"))
 
   if (!title || !slug || !categoryId || !city || !startsAtValue || !ctaType) {
+    return { error: "missing_fields" }
+  }
+
+  if (!isUuid(categoryId)) {
     return { error: "missing_fields" }
   }
 
@@ -88,8 +108,16 @@ function parseEventPayload(formData: FormData): EventPayload | { error: string }
     return { error: "missing_cta_url" }
   }
 
+  if (ctaType === "external_link" && ctaUrl && !isHttpUrl(ctaUrl)) {
+    return { error: "invalid_cta_url" }
+  }
+
   if ((ctaType === "whatsapp" || ctaType === "phone") && !ctaPhone) {
     return { error: "missing_cta_phone" }
+  }
+
+  if ((ctaType === "whatsapp" || ctaType === "phone") && ctaPhone && !isDigitsOnly(ctaPhone)) {
+    return { error: "invalid_cta_phone" }
   }
 
   return {
@@ -129,36 +157,29 @@ function getRepeatedText(formData: FormData, key: string) {
 export async function createEvent(formData: FormData): Promise<EventActionResult> {
   const { supabase, user } = await requireAdmin()
   const payload = parseEventPayload(formData)
-  const eventId = getText(formData, "event_id")
-  const coverImageUrl = getNullableText(formData, "cover_image_url")
-  const galleryUrls = getRepeatedText(formData, "images")
 
   if ("error" in payload) {
     return fail(payload.error)
   }
 
-  if (!eventId) {
-    return fail("missing_event")
-  }
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("events")
-    .insert({ id: eventId, ...payload, created_by: user.id, cover_image_url: coverImageUrl, images: galleryUrls })
+    .insert({ ...payload, created_by: user.id, cover_image_url: null, images: [] })
+    .select("id")
+    .single<{ id: string }>()
 
-  if (error) {
+  if (error || !data?.id) {
     return fail("save_failed")
   }
 
   revalidatePath("/")
   revalidatePath("/admin")
   revalidatePath("/admin/events")
-  return { ok: true }
+  return { ok: true, eventId: data.id }
 }
 
-export async function updateEvent(formData: FormData): Promise<EventActionResult> {
-  const eventId = getText(formData, "event_id")
-
-  if (!eventId) {
+export async function updateEvent(eventId: string, formData: FormData): Promise<EventActionResult> {
+  if (!isUuid(eventId)) {
     return fail("missing_event")
   }
 
@@ -203,6 +224,69 @@ export async function updateEvent(formData: FormData): Promise<EventActionResult
   revalidatePath("/admin")
   revalidatePath("/admin/events")
   revalidatePath(`/admin/events/${eventId}/edit`)
+  return { ok: true }
+}
+
+export async function updateEventImages(formData: FormData): Promise<EventActionResult> {
+  const eventId = getText(formData, "event_id")
+
+  if (!isUuid(eventId)) {
+    return fail("missing_event")
+  }
+
+  const { supabase } = await requireAdmin()
+  const coverImageUrl = getNullableText(formData, "cover_image_url")
+  const galleryUrls = getRepeatedText(formData, "images")
+
+  const { data: currentEvent } = await supabase.from("events").select("id").eq("id", eventId).maybeSingle<{ id: string }>()
+
+  if (!currentEvent) {
+    return fail("missing_event")
+  }
+
+  const { error } = await supabase
+    .from("events")
+    .update({ cover_image_url: coverImageUrl, images: galleryUrls })
+    .eq("id", eventId)
+
+  if (error) {
+    return fail("save_failed")
+  }
+
+  revalidatePath("/")
+  revalidatePath("/admin")
+  revalidatePath("/admin/events")
+  revalidatePath(`/admin/events/${eventId}/edit`)
+  return { ok: true, eventId }
+}
+
+export async function deleteCreatedEvent(formData: FormData): Promise<EventActionResult> {
+  const eventId = getText(formData, "event_id")
+
+  if (!isUuid(eventId)) {
+    return fail("missing_event")
+  }
+
+  const { supabase } = await requireAdmin()
+  const { data: event } = await supabase
+    .from("events")
+    .select("cover_image_url,images")
+    .eq("id", eventId)
+    .maybeSingle<{ cover_image_url: string | null; images: string[] }>()
+
+  const { error } = await supabase.from("events").delete().eq("id", eventId)
+
+  if (error) {
+    return fail("delete_failed")
+  }
+
+  if (event) {
+    await removeImageUrls([event.cover_image_url, ...event.images])
+  }
+
+  revalidatePath("/")
+  revalidatePath("/admin")
+  revalidatePath("/admin/events")
   return { ok: true }
 }
 
@@ -259,7 +343,7 @@ export async function deleteEvent(formData: FormData) {
 
 export async function cleanupEventImages(paths: string[]): Promise<EventActionResult> {
   const { supabase } = await requireAdmin()
-  const safePaths = paths.filter((path) => path.startsWith("events/"))
+  const safePaths = paths.filter(isEventImageStoragePath)
 
   if (safePaths.length === 0) {
     return { ok: true }

@@ -7,6 +7,8 @@ import { DatePicker } from "@/components/admin/date-picker"
 import { ImageSelector } from "@/components/admin/image-selector"
 import { useEventDateRange } from "@/hooks/use-event-date-range"
 import {
+  buildEventCoverImagePath,
+  buildEventGalleryImagePath,
   EVENT_IMAGE_BUCKET,
   getEventCtaLabel,
   slugify,
@@ -18,6 +20,7 @@ import { formatImageSize, optimizeImage } from "@/lib/images/optimize"
 import { removePublicFiles, uploadPublicFile, type UploadedPublicFile } from "@/lib/supabase/storage-client"
 
 type EventActionResult = {
+  eventId?: string
   error?: string
   ok: boolean
 }
@@ -28,6 +31,8 @@ type EventFormProps = {
   cleanupAction: (paths: string[]) => Promise<EventActionResult>
   event?: AdminEventRow
   error?: string | null
+  imageAction?: (formData: FormData) => Promise<EventActionResult>
+  rollbackAction?: (formData: FormData) => Promise<EventActionResult>
 }
 
 type ProgressStage = "idle" | "validating" | "optimizing" | "uploading" | "saving" | "cleaning" | "done" | "error"
@@ -39,6 +44,8 @@ const errorMessages: Record<string, string> = {
   invalid_date: "Use valid event dates.",
   invalid_date_range: "The end date must be after the start date.",
   invalid_image_type: "Upload PNG, JPG, or WebP images only.",
+  invalid_cta_phone: "Use digits only for phone and WhatsApp CTAs.",
+  invalid_cta_url: "Use a valid HTTP or HTTPS URL.",
   missing_cta_phone: "Phone and WhatsApp CTAs require a phone number.",
   missing_cta_url: "External link CTAs require a URL.",
   missing_event: "The selected event could not be found.",
@@ -93,19 +100,19 @@ function SubmitButton({ label, processing }: { label: string; processing: boolea
   )
 }
 
-function sanitizeStorageName(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/\.[^.]+$/, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
-
 function getImageExtension(file: File) {
   return file.type === "image/webp" ? "webp" : "jpg"
 }
 
-export function EventForm({ action, categories, cleanupAction, event, error }: EventFormProps) {
+export function EventForm({
+  action,
+  categories,
+  cleanupAction,
+  event,
+  error,
+  imageAction,
+  rollbackAction,
+}: EventFormProps) {
   const router = useRouter()
   const [title, setTitle] = useState(event?.title ?? "")
   const { endsAt, endsAtPickerKey, handleEndsAtChange, handleStartsAtChange, hasInvalidEndDate, startsAt } =
@@ -118,6 +125,7 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
   const [keptCoverUrls, setKeptCoverUrls] = useState<string[]>(event?.cover_image_url ? [event.cover_image_url] : [])
   const [keptGalleryUrls, setKeptGalleryUrls] = useState<string[]>(event?.images ?? [])
   const [ctaType, setCtaType] = useState<EventCtaType>(event?.cta_type ?? "none")
+  const [ctaPhone, setCtaPhone] = useState(event?.cta_phone?.replace(/\D/g, "") ?? "")
   const [progressStage, setProgressStage] = useState<ProgressStage>("idle")
   const [progressDetail, setProgressDetail] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -147,6 +155,10 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
     [event]
   )
   const processing = !["idle", "done", "error"].includes(progressStage)
+
+  function handleCtaPhoneChange(changeEvent: React.ChangeEvent<HTMLInputElement>) {
+    setCtaPhone(changeEvent.target.value.replace(/\D/g, ""))
+  }
 
   async function cleanupUploadedImages(paths: string[]) {
     if (paths.length === 0) {
@@ -205,7 +217,7 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
       uploadedCover = await uploadPublicFile({
         bucket: EVENT_IMAGE_BUCKET,
         file: cover[0],
-        path: `events/${eventId}/cover-${Date.now()}.${getImageExtension(cover[0])}`,
+        path: buildEventCoverImagePath(eventId, getImageExtension(cover[0])),
       })
       uploadedPaths.push(uploadedCover.path)
     }
@@ -215,13 +227,28 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
       const uploaded = await uploadPublicFile({
         bucket: EVENT_IMAGE_BUCKET,
         file,
-        path: `events/${eventId}/gallery/${Date.now()}-${index + 1}-${sanitizeStorageName(file.name)}.${getImageExtension(file)}`,
+        path: buildEventGalleryImagePath({
+          eventId,
+          extension: getImageExtension(file),
+          fileName: file.name,
+          index: index + 1,
+        }),
       })
       uploadedGallery.push(uploaded)
       uploadedPaths.push(uploaded.path)
     }
 
     return { uploadedCover, uploadedGallery, uploadedPaths }
+  }
+
+  async function rollbackCreatedEvent(eventId: string) {
+    if (!rollbackAction) {
+      return
+    }
+
+    const rollbackFormData = new FormData()
+    rollbackFormData.set("event_id", eventId)
+    await rollbackAction(rollbackFormData)
   }
 
   async function handleSubmit(submitEvent: React.FormEvent<HTMLFormElement>) {
@@ -233,6 +260,7 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
 
     const form = submitEvent.currentTarget
     const uploadedPaths: string[] = []
+    let createdEventId: string | null = null
 
     setSubmitError(null)
     setOptimizationSummary(null)
@@ -251,9 +279,8 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
       return
     }
 
-    const eventId = event?.id ?? crypto.randomUUID()
     const formData = new FormData(form)
-    formData.set("event_id", eventId)
+    formData.delete("event_id")
     formData.set("slug", event?.slug || slugify(title))
     formData.set("status", event?.status ?? "published")
     formData.delete("cover_image")
@@ -269,6 +296,30 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
       setProgressStage("optimizing")
       const optimizedCoverFiles = await optimizeFiles(coverFiles)
       const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
+
+      let eventId = event?.id ?? null
+
+      if (!event) {
+        setProgressStage("saving")
+        setProgressDetail("Creating event record.")
+        const result = await action(formData)
+
+        if (!result.ok || !result.eventId) {
+          setProgressStage("error")
+          setSubmitError(result.error ?? "save_failed")
+          return
+        }
+
+        eventId = result.eventId
+        createdEventId = result.eventId
+        formData.set("event_id", result.eventId)
+      }
+
+      if (!eventId) {
+        setProgressStage("error")
+        setSubmitError("missing_event")
+        return
+      }
 
       setProgressStage("uploading")
       const uploadedImages = await uploadImages({
@@ -299,10 +350,21 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
 
       setProgressStage("saving")
       setProgressDetail("Saving event details to the database.")
-      const result = await action(formData)
+      let result: EventActionResult
+
+      if (event) {
+        result = await action(formData)
+      } else if (imageAction) {
+        result = await imageAction(formData)
+      } else {
+        result = uploadedPaths.length === 0 ? { ok: true } : { ok: false, error: "save_failed" }
+      }
 
       if (!result.ok) {
         await cleanupUploadedImages(uploadedPaths)
+        if (createdEventId) {
+          await rollbackCreatedEvent(createdEventId)
+        }
         setProgressStage("error")
         setSubmitError(result.error ?? "save_failed")
         return
@@ -314,6 +376,9 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
       router.refresh()
     } catch (error) {
       await cleanupUploadedImages(uploadedPaths)
+      if (createdEventId) {
+        await rollbackCreatedEvent(createdEventId)
+      }
       setProgressStage("error")
       setSubmitError(error instanceof Error ? error.message : "upload_failed")
     }
@@ -321,7 +386,6 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
-      {event ? <input type="hidden" name="event_id" value={event.id} /> : null}
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="status" value={event?.status ?? "published"} />
 
@@ -469,7 +533,15 @@ export function EventForm({ action, categories, cleanupAction, event, error }: E
               ) : (
                 <>
                   <Field label="CTA phone" required>
-                    <input className={inputClassName} name="cta_phone" defaultValue={event?.cta_phone ?? ""} required />
+                    <input
+                      className={inputClassName}
+                      name="cta_phone"
+                      inputMode="numeric"
+                      pattern="[0-9]+"
+                      value={ctaPhone}
+                      onChange={handleCtaPhoneChange}
+                      required
+                    />
                   </Field>
                   <input type="hidden" name="cta_url" value="" />
                 </>

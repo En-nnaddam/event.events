@@ -80,7 +80,7 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
         </div>
 
         <EventForm
-          action={updateEvent}
+          action={updateEvent.bind(null, event.id)}
           categories={categories}
           cleanupAction={cleanupEventImages}
           event={event}
