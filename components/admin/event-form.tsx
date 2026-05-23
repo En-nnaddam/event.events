@@ -1,23 +1,29 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { DatePicker } from "@/components/admin/date-picker"
+import {
+  EventCtaInput,
+  type EventCtaInputHandle,
+} from "@/components/admin/event-cta-input"
 import { ImageSelector } from "@/components/admin/image-selector"
 import { useEventDateRange } from "@/hooks/use-event-date-range"
 import {
   buildEventCoverImagePath,
   buildEventGalleryImagePath,
   EVENT_IMAGE_BUCKET,
-  getEventCtaLabel,
   slugify,
   type AdminEventRow,
   type CategoryOption,
-  type EventCtaType,
 } from "@/lib/admin/events"
 import { formatImageSize, optimizeImage } from "@/lib/images/optimize"
-import { removePublicFiles, uploadPublicFile, type UploadedPublicFile } from "@/lib/supabase/storage-client"
+import {
+  removePublicFiles,
+  uploadPublicFile,
+  type UploadedPublicFile,
+} from "@/lib/supabase/storage-client"
 
 type EventActionResult = {
   eventId?: string
@@ -35,10 +41,19 @@ type EventFormProps = {
   rollbackAction?: (formData: FormData) => Promise<EventActionResult>
 }
 
-type ProgressStage = "idle" | "validating" | "optimizing" | "uploading" | "saving" | "cleaning" | "done" | "error"
+type ProgressStage =
+  | "idle"
+  | "validating"
+  | "optimizing"
+  | "uploading"
+  | "saving"
+  | "cleaning"
+  | "done"
+  | "error"
 
 const errorMessages: Record<string, string> = {
-  cleanup_failed: "The event could not be saved and uploaded images could not be fully cleaned up.",
+  cleanup_failed:
+    "The event could not be saved and uploaded images could not be fully cleaned up.",
   image_too_large: "Images must be 5MB or smaller.",
   image_optimization_failed: "One or more images could not be optimized.",
   invalid_date: "Use valid event dates.",
@@ -88,12 +103,18 @@ function Field({
   )
 }
 
-function SubmitButton({ label, processing }: { label: string; processing: boolean }) {
+function SubmitButton({
+  label,
+  processing,
+}: {
+  label: string
+  processing: boolean
+}) {
   return (
     <button
       type="submit"
       disabled={processing}
-      className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50"
+      className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
     >
       {processing ? "Working..." : label}
     </button>
@@ -114,26 +135,40 @@ export function EventForm({
   rollbackAction,
 }: EventFormProps) {
   const router = useRouter()
+  const ctaInputRef = useRef<EventCtaInputHandle>(null)
   const [title, setTitle] = useState(event?.title ?? "")
-  const { endsAt, endsAtPickerKey, handleEndsAtChange, handleStartsAtChange, hasInvalidEndDate, startsAt } =
-    useEventDateRange({
-      endsAt: event?.ends_at ?? null,
-      startsAt: event?.starts_at ?? null,
-    })
+  const {
+    endsAt,
+    endsAtPickerKey,
+    handleEndsAtChange,
+    handleStartsAtChange,
+    hasInvalidEndDate,
+    startsAt,
+  } = useEventDateRange({
+    endsAt: event?.ends_at ?? null,
+    startsAt: event?.starts_at ?? null,
+  })
   const [coverFiles, setCoverFiles] = useState<File[]>([])
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
-  const [keptCoverUrls, setKeptCoverUrls] = useState<string[]>(event?.cover_image_url ? [event.cover_image_url] : [])
-  const [keptGalleryUrls, setKeptGalleryUrls] = useState<string[]>(event?.images ?? [])
-  const [ctaType, setCtaType] = useState<EventCtaType>(event?.cta_type ?? "none")
-  const [ctaPhone, setCtaPhone] = useState(event?.cta_phone?.replace(/\D/g, "") ?? "")
+  const [keptCoverUrls, setKeptCoverUrls] = useState<string[]>(
+    event?.cover_image_url ? [event.cover_image_url] : []
+  )
+  const [keptGalleryUrls, setKeptGalleryUrls] = useState<string[]>(
+    event?.images ?? []
+  )
   const [progressStage, setProgressStage] = useState<ProgressStage>("idle")
   const [progressDetail, setProgressDetail] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [optimizationSummary, setOptimizationSummary] = useState<string | null>(null)
+  const [optimizationSummary, setOptimizationSummary] = useState<string | null>(
+    null
+  )
 
   const slug = event?.slug || slugify(title)
-  const submittedCtaLabel = getEventCtaLabel(ctaType)
-  const message = submitError ? errorMessages[submitError] || submitError : error ? errorMessages[error] : null
+  const message = submitError
+    ? errorMessages[submitError] || submitError
+    : error
+      ? errorMessages[error]
+      : null
   const existingCoverImages = useMemo(
     () =>
       event?.cover_image_url
@@ -156,17 +191,15 @@ export function EventForm({
   )
   const processing = !["idle", "done", "error"].includes(progressStage)
 
-  function handleCtaPhoneChange(changeEvent: React.ChangeEvent<HTMLInputElement>) {
-    setCtaPhone(changeEvent.target.value.replace(/\D/g, ""))
-  }
-
   async function cleanupUploadedImages(paths: string[]) {
     if (paths.length === 0) {
       return
     }
 
     setProgressStage("cleaning")
-    setProgressDetail("Removing files that were uploaded before the save failed.")
+    setProgressDetail(
+      "Removing files that were uploaded before the save failed."
+    )
 
     try {
       await removePublicFiles(EVENT_IMAGE_BUCKET, paths)
@@ -223,7 +256,9 @@ export function EventForm({
     }
 
     for (const [index, file] of gallery.entries()) {
-      setProgressDetail(`Uploading gallery image ${index + 1} of ${gallery.length}`)
+      setProgressDetail(
+        `Uploading gallery image ${index + 1} of ${gallery.length}`
+      )
       const uploaded = await uploadPublicFile({
         bucket: EVENT_IMAGE_BUCKET,
         file,
@@ -279,6 +314,12 @@ export function EventForm({
       return
     }
 
+    if (!ctaInputRef.current?.validate()) {
+      setProgressStage("error")
+      setSubmitError("invalid_cta_url")
+      return
+    }
+
     const formData = new FormData(form)
     formData.delete("event_id")
     formData.set("slug", event?.slug || slugify(title))
@@ -329,14 +370,17 @@ export function EventForm({
       })
       uploadedPaths.push(...uploadedImages.uploadedPaths)
 
-      const finalCoverUrl = uploadedImages.uploadedCover?.publicUrl ?? keptCoverUrls[0] ?? null
+      const finalCoverUrl =
+        uploadedImages.uploadedCover?.publicUrl ?? keptCoverUrls[0] ?? null
       const finalGalleryUrls = [
         ...keptGalleryUrls,
         ...uploadedImages.uploadedGallery.map((image) => image.publicUrl),
       ]
       const removedImageUrls = event
         ? [
-            ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl ? [event.cover_image_url] : []),
+            ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl
+              ? [event.cover_image_url]
+              : []),
             ...event.images.filter((image) => !keptGalleryUrls.includes(image)),
           ]
         : []
@@ -346,7 +390,9 @@ export function EventForm({
       }
 
       finalGalleryUrls.forEach((url) => formData.append("images", url))
-      removedImageUrls.forEach((url) => formData.append("removed_image_urls", url))
+      removedImageUrls.forEach((url) =>
+        formData.append("removed_image_urls", url)
+      )
 
       setProgressStage("saving")
       setProgressDetail("Saving event details to the database.")
@@ -357,7 +403,10 @@ export function EventForm({
       } else if (imageAction) {
         result = await imageAction(formData)
       } else {
-        result = uploadedPaths.length === 0 ? { ok: true } : { ok: false, error: "save_failed" }
+        result =
+          uploadedPaths.length === 0
+            ? { ok: true }
+            : { ok: false, error: "save_failed" }
       }
 
       if (!result.ok) {
@@ -397,8 +446,12 @@ export function EventForm({
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
         <div>
-          <h2 className="text-lg font-semibold tracking-normal">Core details</h2>
-          <p className="mt-1 text-sm text-muted-foreground">These fields control how the event appears publicly.</p>
+          <h2 className="text-lg font-semibold tracking-normal">
+            Core details
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            These fields control how the event appears publicly.
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -413,7 +466,12 @@ export function EventForm({
           </Field>
 
           <Field label="Category" required>
-            <select className={inputClassName} name="category_id" defaultValue={event?.category_id ?? ""} required>
+            <select
+              className={inputClassName}
+              name="category_id"
+              defaultValue={event?.category_id ?? ""}
+              required
+            >
               <option value="" disabled>
                 Select category
               </option>
@@ -437,27 +495,49 @@ export function EventForm({
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
         <div>
-          <h2 className="text-lg font-semibold tracking-normal">When and where</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Dates, city, and venue details shown on event cards.</p>
+          <h2 className="text-lg font-semibold tracking-normal">
+            When and where
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Dates, city, and venue details shown on event cards.
+          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="City" required>
-            <input className={inputClassName} name="city" defaultValue={event?.city ?? ""} required />
+            <input
+              className={inputClassName}
+              name="city"
+              defaultValue={event?.city ?? ""}
+              required
+            />
           </Field>
 
           <Field label="Location">
-            <input className={inputClassName} name="location" defaultValue={event?.location ?? ""} />
+            <input
+              className={inputClassName}
+              name="location"
+              defaultValue={event?.location ?? ""}
+            />
           </Field>
 
           <Field label="Starts at" required>
-            <DatePicker name="starts_at" value={startsAt} onChange={handleStartsAtChange} required />
+            <DatePicker
+              name="starts_at"
+              value={startsAt}
+              onChange={handleStartsAtChange}
+              required
+            />
           </Field>
 
           <Field label="Ends at">
             <DatePicker
               key={endsAtPickerKey}
-              error={hasInvalidEndDate ? "End date must be after the start date." : undefined}
+              error={
+                hasInvalidEndDate
+                  ? "End date must be after the start date."
+                  : undefined
+              }
               name="ends_at"
               value={endsAt}
               onChange={handleEndsAtChange}
@@ -469,7 +549,9 @@ export function EventForm({
       <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
         <div>
           <h2 className="text-lg font-semibold tracking-normal">Images</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Images are optimized before uploading.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Images are optimized before uploading.
+          </p>
         </div>
 
         <ImageSelector
@@ -497,74 +579,39 @@ export function EventForm({
 
       <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
         <div>
-          <h2 className="text-lg font-semibold tracking-normal">Call to action</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Choose how visitors can contact or book.</p>
+          <h2 className="text-lg font-semibold tracking-normal">
+            Call to action
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose how visitors can contact or book.
+          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="CTA type">
-            <select
-              className={inputClassName}
-              name="cta_type"
-              value={ctaType}
-              onChange={(event) => setCtaType(event.target.value as EventCtaType)}
-            >
-              <option value="none">None</option>
-              <option value="external_link">External link</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="phone">Phone</option>
-            </select>
-          </Field>
-
-          {ctaType !== "none" ? (
-            <>
-              <input type="hidden" name="cta_label" value={submittedCtaLabel} />
-              <Field label="CTA label">
-                <input className={inputClassName} value={submittedCtaLabel} readOnly />
-              </Field>
-
-              {ctaType === "external_link" ? (
-                <>
-                  <Field label="CTA URL" required>
-                    <input className={inputClassName} name="cta_url" type="url" defaultValue={event?.cta_url ?? ""} required />
-                  </Field>
-                  <input type="hidden" name="cta_phone" value="" />
-                </>
-              ) : (
-                <>
-                  <Field label="CTA phone" required>
-                    <input
-                      className={inputClassName}
-                      name="cta_phone"
-                      inputMode="numeric"
-                      pattern="[0-9]+"
-                      value={ctaPhone}
-                      onChange={handleCtaPhoneChange}
-                      required
-                    />
-                  </Field>
-                  <input type="hidden" name="cta_url" value="" />
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <input type="hidden" name="cta_label" value="" />
-              <input type="hidden" name="cta_url" value="" />
-              <input type="hidden" name="cta_phone" value="" />
-            </>
-          )}
-        </div>
+        <EventCtaInput ref={ctaInputRef} event={event} />
       </section>
 
       {progressStage !== "idle" ? (
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium">{progressLabels[progressStage]}</p>
-            {processing ? <p className="text-xs text-muted-foreground">Please keep this page open.</p> : null}
+            <p className="text-sm font-medium">
+              {progressLabels[progressStage]}
+            </p>
+            {processing ? (
+              <p className="text-xs text-muted-foreground">
+                Please keep this page open.
+              </p>
+            ) : null}
           </div>
-          {progressDetail ? <p className="mt-2 text-sm text-muted-foreground">{progressDetail}</p> : null}
-          {optimizationSummary ? <p className="mt-2 text-sm text-muted-foreground">{optimizationSummary}</p> : null}
+          {progressDetail ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {progressDetail}
+            </p>
+          ) : null}
+          {optimizationSummary ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {optimizationSummary}
+            </p>
+          ) : null}
           {processing ? (
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
               <div className="h-full w-1/2 animate-pulse rounded-full bg-primary" />
@@ -574,10 +621,13 @@ export function EventForm({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton label={event ? "Save event" : "Create event"} processing={processing} />
+        <SubmitButton
+          label={event ? "Save event" : "Create event"}
+          processing={processing}
+        />
         <a
           href="/admin/events"
-          className={`inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 ${
+          className={`inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none ${
             processing ? "pointer-events-none opacity-50" : ""
           }`}
         >
