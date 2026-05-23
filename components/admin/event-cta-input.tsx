@@ -2,11 +2,7 @@
 
 import { forwardRef, useImperativeHandle, useState } from "react"
 
-import {
-  getEventCtaLabel,
-  type EventCtaType,
-  type EventFormEvent,
-} from "@/lib/admin/events"
+import { type EventCtaType, type EventFormEvent } from "@/lib/admin/events"
 import { cn } from "@/lib/utils"
 
 export type EventCtaInputHandle = {
@@ -66,7 +62,6 @@ export const EventCtaInput = forwardRef<
   const [ctaUrl, setCtaUrl] = useState(event?.cta_url ?? "")
   const [ctaUrlTouched, setCtaUrlTouched] = useState(false)
 
-  const ctaLabel = getEventCtaLabel(ctaType)
   const trimmedCtaUrl = ctaUrl.trim()
   const hasCtaUrlValue = trimmedCtaUrl.length > 0
   const hasValidCtaUrl = hasCtaUrlValue && isHttpUrl(trimmedCtaUrl)
@@ -125,10 +120,6 @@ export const EventCtaInput = forwardRef<
 
       {ctaType !== "none" ? (
         <>
-          <Field label="CTA label">
-            <input className={inputClassName} value={ctaLabel} readOnly />
-          </Field>
-
           {ctaType === "external_link" ? (
             <>
               <Field label="CTA URL" required>
