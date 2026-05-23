@@ -14,7 +14,7 @@ type ImageSelectorProps = {
   existingInputName?: string
   label: string
   multiple?: boolean
-  name: string
+  name?: string
   onExistingChange?: (urls: string[]) => void
   onFilesChange?: (files: File[]) => void
   singleExistingUrlName?: string
@@ -51,7 +51,9 @@ function ImageThumb({
   url: string
 }) {
   return (
-    <div className={`overflow-hidden rounded-lg border bg-background ${removed ? "border-destructive/40 opacity-55" : "border-border"}`}>
+    <div
+      className={`overflow-hidden rounded-lg border bg-background ${removed ? "border-destructive/40 opacity-55" : "border-border"}`}
+    >
       <div
         aria-label={label}
         role="img"
@@ -61,13 +63,17 @@ function ImageThumb({
       <div className="flex min-w-0 items-center justify-between gap-2 p-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{label}</p>
-          {meta ? <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p> : null}
+          {meta ? (
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {meta}
+            </p>
+          ) : null}
         </div>
         {onRemove ? (
           <button
             type="button"
             onClick={onRemove}
-            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-border px-3 text-xs font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+            className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-border px-3 text-xs font-medium transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
           >
             {removed ? "Restore" : "Remove"}
           </button>
@@ -94,11 +100,16 @@ export function ImageSelector({
   const inputRef = useRef<HTMLInputElement>(null)
   const selectedImagesRef = useRef<SelectedImage[]>([])
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([])
-  const [keptExisting, setKeptExisting] = useState(() => new Set(existingImages.map((image) => image.url)))
+  const [keptExisting, setKeptExisting] = useState(
+    () => new Set(existingImages.map((image) => image.url))
+  )
 
   const hasImages = existingImages.length > 0 || selectedImages.length > 0
   const keptExistingUrls = useMemo(
-    () => existingImages.filter((image) => keptExisting.has(image.url)).map((image) => image.url),
+    () =>
+      existingImages
+        .filter((image) => keptExisting.has(image.url))
+        .map((image) => image.url),
     [existingImages, keptExisting]
   )
 
@@ -117,7 +128,9 @@ export function ImageSelector({
 
   useEffect(() => {
     return () => {
-      selectedImagesRef.current.forEach((image) => URL.revokeObjectURL(image.url))
+      selectedImagesRef.current.forEach((image) =>
+        URL.revokeObjectURL(image.url)
+      )
     }
   }, [])
 
@@ -154,7 +167,11 @@ export function ImageSelector({
 
   function handleSelect(files: FileList | null) {
     const nextFiles = Array.from(files ?? [])
-    updateSelectedImages(multiple ? [...selectedImages.map((image) => image.file), ...nextFiles] : nextFiles.slice(0, 1))
+    updateSelectedImages(
+      multiple
+        ? [...selectedImages.map((image) => image.file), ...nextFiles]
+        : nextFiles.slice(0, 1)
+    )
   }
 
   function removeSelectedImage(id: string) {
@@ -186,13 +203,19 @@ export function ImageSelector({
       <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium">{label}</p>
-          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+          {description ? (
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          ) : null}
         </div>
         <label
           htmlFor={inputId}
-          className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-within:ring-3 focus-within:ring-ring/40"
+          className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition focus-within:ring-3 focus-within:ring-ring/40 hover:bg-primary/85"
         >
-          {multiple ? "Add images" : selectedImages.length ? "Change image" : "Select image"}
+          {multiple
+            ? "Add images"
+            : selectedImages.length
+              ? "Change image"
+              : "Select image"}
         </label>
         <input
           ref={inputRef}
@@ -207,15 +230,28 @@ export function ImageSelector({
       </div>
 
       {singleExistingUrlName && existingImages[0] ? (
-        <input type="hidden" name={singleExistingUrlName} value={existingImages[0].url} />
+        <input
+          type="hidden"
+          name={singleExistingUrlName}
+          value={existingImages[0].url}
+        />
       ) : null}
 
-      {singleKeepName && existingImages[0] && keptExisting.has(existingImages[0].url) ? (
+      {singleKeepName &&
+      existingImages[0] &&
+      keptExisting.has(existingImages[0].url) ? (
         <input type="hidden" name={singleKeepName} value="true" />
       ) : null}
 
       {existingInputName
-        ? keptExistingUrls.map((url) => <input key={url} type="hidden" name={existingInputName} value={url} />)
+        ? keptExistingUrls.map((url) => (
+            <input
+              key={url}
+              type="hidden"
+              name={existingInputName}
+              value={url}
+            />
+          ))
         : null}
 
       {hasImages ? (
@@ -224,7 +260,11 @@ export function ImageSelector({
             <ImageThumb
               key={image.url}
               label={image.label ?? `Current image ${index + 1}`}
-              meta={keptExisting.has(image.url) ? "Current image" : "Will be removed"}
+              meta={
+                keptExisting.has(image.url)
+                  ? "Current image"
+                  : "Will be removed"
+              }
               removed={!keptExisting.has(image.url)}
               url={image.url}
               onRemove={() => toggleExisting(image.url)}
@@ -244,7 +284,9 @@ export function ImageSelector({
       ) : (
         <div className="rounded-lg border border-border bg-muted/35 p-6 text-center">
           <p className="text-sm font-medium">No image selected</p>
-          <p className="mt-1 text-sm text-muted-foreground">PNG, JPG, or WebP up to 5MB.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            PNG, JPG, or WebP up to 5MB.
+          </p>
         </div>
       )}
     </div>

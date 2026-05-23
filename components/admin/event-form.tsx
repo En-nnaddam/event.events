@@ -14,7 +14,6 @@ import {
   buildEventCoverImagePath,
   buildEventGalleryImagePath,
   EVENT_IMAGE_BUCKET,
-  slugify,
   type AdminEventRow,
   type CategoryOption,
 } from "@/lib/admin/events"
@@ -37,8 +36,11 @@ type EventFormProps = {
   cleanupAction: (paths: string[]) => Promise<EventActionResult>
   event?: AdminEventRow
   error?: string | null
-  imageAction?: (formData: FormData) => Promise<EventActionResult>
-  rollbackAction?: (formData: FormData) => Promise<EventActionResult>
+  imageAction?: (
+    eventId: string,
+    formData: FormData
+  ) => Promise<EventActionResult>
+  rollbackAction?: (eventId: string) => Promise<EventActionResult>
 }
 
 type ProgressStage =
@@ -163,7 +165,6 @@ export function EventForm({
     null
   )
 
-  const slug = event?.slug || slugify(title)
   const message = submitError
     ? errorMessages[submitError] || submitError
     : error
@@ -281,9 +282,7 @@ export function EventForm({
       return
     }
 
-    const rollbackFormData = new FormData()
-    rollbackFormData.set("event_id", eventId)
-    await rollbackAction(rollbackFormData)
+    await rollbackAction(eventId)
   }
 
   async function handleSubmit(submitEvent: React.FormEvent<HTMLFormElement>) {
@@ -321,9 +320,6 @@ export function EventForm({
     }
 
     const formData = new FormData(form)
-    formData.delete("event_id")
-    formData.set("slug", event?.slug || slugify(title))
-    formData.set("status", event?.status ?? "published")
     formData.delete("cover_image")
     formData.delete("gallery_images")
     formData.delete("existing_images")
@@ -353,7 +349,6 @@ export function EventForm({
 
         eventId = result.eventId
         createdEventId = result.eventId
-        formData.set("event_id", result.eventId)
       }
 
       if (!eventId) {
@@ -401,7 +396,7 @@ export function EventForm({
       if (event) {
         result = await action(formData)
       } else if (imageAction) {
-        result = await imageAction(formData)
+        result = await imageAction(eventId, formData)
       } else {
         result =
           uploadedPaths.length === 0
@@ -435,9 +430,6 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
-      <input type="hidden" name="slug" value={slug} />
-      <input type="hidden" name="status" value={event?.status ?? "published"} />
-
       {message ? (
         <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {message}
@@ -557,20 +549,15 @@ export function EventForm({
         <ImageSelector
           label="Cover image"
           description="Use one strong image for the event card hero."
-          name="cover_image"
           existingImages={existingCoverImages}
           onExistingChange={setKeptCoverUrls}
           onFilesChange={setCoverFiles}
-          singleExistingUrlName="existing_cover_image_url"
-          singleKeepName="keep_cover_image"
         />
 
         <ImageSelector
           label="Gallery images"
           description="Add supporting images that appear under the cover."
-          name="gallery_images"
           multiple
-          existingInputName="existing_images"
           existingImages={existingGalleryImages}
           onExistingChange={setKeptGalleryUrls}
           onFilesChange={setGalleryFiles}

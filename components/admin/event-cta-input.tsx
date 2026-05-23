@@ -66,7 +66,7 @@ export const EventCtaInput = forwardRef<
   const [ctaUrl, setCtaUrl] = useState(event?.cta_url ?? "")
   const [ctaUrlTouched, setCtaUrlTouched] = useState(false)
 
-  const submittedCtaLabel = getEventCtaLabel(ctaType)
+  const ctaLabel = getEventCtaLabel(ctaType)
   const trimmedCtaUrl = ctaUrl.trim()
   const hasCtaUrlValue = trimmedCtaUrl.length > 0
   const hasValidCtaUrl = hasCtaUrlValue && isHttpUrl(trimmedCtaUrl)
@@ -76,10 +76,10 @@ export const EventCtaInput = forwardRef<
     hasCtaUrlValue &&
     !hasValidCtaUrl
   const ctaUrlMessageId = "cta-url-validation-message"
-  const ctaUrlClassName = cn(inputClassName,
-    hasValidCtaUrl
-      ? validInputClassName
-      : invalidInputClassName
+  const ctaUrlClassName = cn(
+    inputClassName,
+    hasValidCtaUrl && validInputClassName,
+    hasInvalidCtaUrl && invalidInputClassName
   )
 
   useImperativeHandle(ref, () => ({
@@ -125,13 +125,8 @@ export const EventCtaInput = forwardRef<
 
       {ctaType !== "none" ? (
         <>
-          <input type="hidden" name="cta_label" value={submittedCtaLabel} />
           <Field label="CTA label">
-            <input
-              className={inputClassName}
-              value={submittedCtaLabel}
-              readOnly
-            />
+            <input className={inputClassName} value={ctaLabel} readOnly />
           </Field>
 
           {ctaType === "external_link" ? (
@@ -182,7 +177,6 @@ export const EventCtaInput = forwardRef<
         </>
       ) : (
         <>
-          <input type="hidden" name="cta_label" value="" />
           <input type="hidden" name="cta_url" value="" />
           <input type="hidden" name="cta_phone" value="" />
         </>

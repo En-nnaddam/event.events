@@ -5,7 +5,12 @@ import { EventForm } from "@/components/admin/event-form"
 import type { CategoryOption } from "@/lib/admin/events"
 import { createClient } from "@/lib/supabase/server"
 
-import { cleanupEventImages, createEvent, deleteCreatedEvent, updateEventImages } from "../actions"
+import {
+  cleanupEventImages,
+  createEvent,
+  deleteCreatedEvent,
+  updateEventImages,
+} from "../actions"
 
 type NewEventPageProps = {
   searchParams: Promise<{
@@ -13,7 +18,9 @@ type NewEventPageProps = {
   }>
 }
 
-export default async function NewEventPage({ searchParams }: NewEventPageProps) {
+export default async function NewEventPage({
+  searchParams,
+}: NewEventPageProps) {
   const params = await searchParams
   const supabase = await createClient()
   const { data: categories } = await supabase
@@ -28,12 +35,17 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
 
   return (
     <main className="min-h-svh bg-background p-6">
-        <section className="mx-auto max-w-4xl py-10">
+      <section className="mx-auto max-w-4xl py-10">
         <div className="mb-6">
-          <Link href="/admin/events" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            href="/admin/events"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Events management
           </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">Create event</h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal">
+            Create event
+          </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
             Add a public or archived event using the existing category list.
           </p>
@@ -47,7 +59,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           imageAction={updateEventImages}
           rollbackAction={deleteCreatedEvent}
         />
-        </section>
+      </section>
     </main>
   )
 }
