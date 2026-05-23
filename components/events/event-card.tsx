@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils"
 export type EventFeedItem = {
   id: string
   title: string
-  slug: string
   description: string | null
   city: string
   location: string | null
@@ -18,13 +17,10 @@ export type EventFeedItem = {
   cover_image_url: string | null
   images: string[]
   cta_type: EventCtaType
-  cta_label: string | null
   cta_url: string | null
   cta_phone: string | null
-  status: "published"
   categories: {
     name: string
-    slug: string
   } | null
 }
 
@@ -55,7 +51,7 @@ function getCta(event: EventFeedItem) {
   if (event.cta_type === "external_link" && event.cta_url) {
     return {
       href: event.cta_url,
-      label: event.cta_label || getEventCtaLabel(event.cta_type),
+      label: getEventCtaLabel(event.cta_type),
     }
   }
 
@@ -64,14 +60,14 @@ function getCta(event: EventFeedItem) {
 
     return {
       href: `https://wa.me/${phone}`,
-      label: event.cta_label || getEventCtaLabel(event.cta_type),
+      label: getEventCtaLabel(event.cta_type),
     }
   }
 
   if (event.cta_type === "phone" && event.cta_phone) {
     return {
       href: `tel:${event.cta_phone}`,
-      label: event.cta_label || getEventCtaLabel(event.cta_type),
+      label: getEventCtaLabel(event.cta_type),
     }
   }
 
@@ -117,7 +113,7 @@ function EventImage({
       type="button"
       onClick={onOpen}
       className={cn(
-        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-muted text-left focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
+        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-muted text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
       aria-label={`Open ${title}`}
@@ -150,7 +146,9 @@ function ImageModal({
 }) {
   const activeImage = images[activeIndex]
   const hasMultipleImages = images.length > 1
-  const isActiveImageLoaded = activeImage ? loadedImageSrcs.has(activeImage.src) : false
+  const isActiveImageLoaded = activeImage
+    ? loadedImageSrcs.has(activeImage.src)
+    : false
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -183,7 +181,11 @@ function ImageModal({
     }
 
     const preloadIndexes = hasMultipleImages
-      ? [activeIndex, (activeIndex - 1 + images.length) % images.length, (activeIndex + 1) % images.length]
+      ? [
+          activeIndex,
+          (activeIndex - 1 + images.length) % images.length,
+          (activeIndex + 1) % images.length,
+        ]
       : [activeIndex]
 
     preloadIndexes.forEach((index) => {
@@ -218,12 +220,14 @@ function ImageModal({
         <div className="flex items-center justify-between gap-3 text-white">
           <p className="min-w-0 truncate text-sm font-medium">
             {activeImage.title}
-            {hasMultipleImages ? ` (${activeIndex + 1} of ${images.length})` : ""}
+            {hasMultipleImages
+              ? ` (${activeIndex + 1} of ${images.length})`
+              : ""}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
             aria-label="Close image preview"
           >
             X
@@ -237,7 +241,7 @@ function ImageModal({
             fill
             sizes="(max-width: 768px) 80vw, 24vw"
             className={cn(
-              "object-cover opacity-45 blur-2xl scale-110 transition-opacity duration-300",
+              "scale-110 object-cover opacity-45 blur-2xl transition-opacity duration-300",
               isActiveImageLoaded ? "opacity-0" : "opacity-45"
             )}
             aria-hidden="true"
@@ -270,8 +274,10 @@ function ImageModal({
             <>
               <button
                 type="button"
-                onClick={() => onSelect((activeIndex - 1 + images.length) % images.length)}
-                className="absolute left-3 top-1/2 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+                onClick={() =>
+                  onSelect((activeIndex - 1 + images.length) % images.length)
+                }
+                className="absolute top-1/2 left-3 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
                 aria-label="Show previous image"
               >
                 Previous
@@ -279,7 +285,7 @@ function ImageModal({
               <button
                 type="button"
                 onClick={() => onSelect((activeIndex + 1) % images.length)}
-                className="absolute right-3 top-1/2 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/40"
+                className="absolute top-1/2 right-3 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
                 aria-label="Show next image"
               >
                 Next
@@ -294,7 +300,9 @@ function ImageModal({
 
 export function EventCard({ event }: { event: EventFeedItem }) {
   const cta = getCta(event)
-  const galleryImages = event.images.filter((image) => image && image !== event.cover_image_url)
+  const galleryImages = event.images.filter(
+    (image) => image && image !== event.cover_image_url
+  )
   const imageItems = useMemo<EventImageItem[]>(() => {
     const coverImage = event.cover_image_url
       ? [
@@ -316,7 +324,9 @@ export function EventCard({ event }: { event: EventFeedItem }) {
     ]
   }, [event.cover_image_url, event.title, galleryImages])
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null)
-  const [loadedModalImageSrcs, setLoadedModalImageSrcs] = useState<Set<string>>(() => new Set())
+  const [loadedModalImageSrcs, setLoadedModalImageSrcs] = useState<Set<string>>(
+    () => new Set()
+  )
 
   function markModalImageLoaded(src: string) {
     setLoadedModalImageSrcs((currentSrcs) => {
@@ -339,11 +349,13 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           title={`${event.title} cover image`}
           sizes="(max-width: 768px) calc(100vw - 2rem), 38vw"
           className="aspect-video min-h-0 md:aspect-auto md:min-h-56"
-          onOpen={event.cover_image_url ? () => setActiveImageIndex(0) : undefined}
+          onOpen={
+            event.cover_image_url ? () => setActiveImageIndex(0) : undefined
+          }
         />
 
         {galleryImages.length > 0 ? (
-          <div className="flex min-w-0 max-w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-1">
+          <div className="flex max-w-full min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-1">
             {galleryImages.map((image, index) => (
               <EventImage
                 key={image}
@@ -352,7 +364,9 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 title={`${event.title} gallery image ${index + 1}`}
                 sizes="9rem"
                 className="h-24 min-h-24 w-36 shrink-0 snap-start rounded-md"
-                onOpen={() => setActiveImageIndex(event.cover_image_url ? index + 1 : index)}
+                onOpen={() =>
+                  setActiveImageIndex(event.cover_image_url ? index + 1 : index)
+                }
               />
             ))}
           </div>
@@ -360,7 +374,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-normal text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-normal text-muted-foreground uppercase">
           {event.categories?.name ? (
             <span className="rounded-md bg-secondary px-2 py-1 text-secondary-foreground">
               {event.categories.name}
@@ -370,9 +384,11 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold tracking-normal text-foreground">{event.title}</h2>
+          <h2 className="text-2xl font-semibold tracking-normal text-foreground">
+            {event.title}
+          </h2>
           {event.description ? (
-            <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+            <p className="mt-3 text-sm leading-6 whitespace-pre-line text-muted-foreground">
               {event.description}
             </p>
           ) : null}
@@ -381,27 +397,36 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         <dl className="grid gap-3 text-sm md:grid-cols-2">
           <div className="rounded-md border border-border bg-background p-3">
             <dt className="font-medium text-foreground">Date</dt>
-            <dd className="mt-1 break-words leading-5 text-muted-foreground [overflow-wrap:anywhere]">
+            <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
               {formatDateRange(event)}
             </dd>
           </div>
 
           <div className="rounded-md border border-border bg-background p-3">
             <dt className="font-medium text-foreground">Place</dt>
-            <dd className="mt-1 break-words leading-5 text-muted-foreground [overflow-wrap:anywhere]">
+            <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
               {event.location ? `${event.location}, ${event.city}` : event.city}
             </dd>
           </div>
-
         </dl>
 
         {cta ? (
           <div>
             <a
               href={cta.href}
-              target={event.cta_type === "external_link" || event.cta_type === "whatsapp" ? "_blank" : undefined}
-              rel={event.cta_type === "external_link" || event.cta_type === "whatsapp" ? "noreferrer" : undefined}
-              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+              target={
+                event.cta_type === "external_link" ||
+                event.cta_type === "whatsapp"
+                  ? "_blank"
+                  : undefined
+              }
+              rel={
+                event.cta_type === "external_link" ||
+                event.cta_type === "whatsapp"
+                  ? "noreferrer"
+                  : undefined
+              }
+              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
             >
               {cta.label}
             </a>

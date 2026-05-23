@@ -14,8 +14,8 @@ import {
   buildEventCoverImagePath,
   buildEventGalleryImagePath,
   EVENT_IMAGE_BUCKET,
-  type AdminEventRow,
   type CategoryOption,
+  type EventFormEvent,
 } from "@/lib/admin/events"
 import { formatImageSize, optimizeImage } from "@/lib/images/optimize"
 import {
@@ -34,7 +34,7 @@ type EventFormProps = {
   action: (formData: FormData) => Promise<EventActionResult>
   categories: CategoryOption[]
   cleanupAction: (paths: string[]) => Promise<EventActionResult>
-  event?: AdminEventRow
+  event?: EventFormEvent
   error?: string | null
   imageAction?: (
     eventId: string,
@@ -463,7 +463,7 @@ export function EventForm({
 
   async function handleEditSubmit(
     formData: FormData,
-    currentEvent: AdminEventRow
+    currentEvent: EventFormEvent
   ) {
     const uploadedPaths: string[] = []
 

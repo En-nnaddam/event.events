@@ -4,8 +4,8 @@ import { forwardRef, useImperativeHandle, useState } from "react"
 
 import {
   getEventCtaLabel,
-  type AdminEventRow,
   type EventCtaType,
+  type EventFormEvent,
 } from "@/lib/admin/events"
 import { cn } from "@/lib/utils"
 
@@ -14,7 +14,7 @@ export type EventCtaInputHandle = {
 }
 
 type EventCtaInputProps = {
-  event?: AdminEventRow
+  event?: Pick<EventFormEvent, "cta_type" | "cta_url" | "cta_phone">
 }
 
 const inputClassName =

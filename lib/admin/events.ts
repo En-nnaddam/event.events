@@ -11,21 +11,20 @@ const eventCtaLabels: Record<EventCtaType, string> = {
   whatsapp: "Message on WhatsApp",
 }
 
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const eventCoverImageFilePattern = /^cover-\d+\.(?:jpg|webp)$/
 const eventGalleryImageFilePattern = /^\d+-\d+-[a-z0-9-]+\.(?:jpg|webp)$/
 
 export type CategoryOption = {
   id: string
   name: string
-  slug: string
 }
 
-export type AdminEventRow = {
+export type EventFormEvent = {
   id: string
   category_id: string
   title: string
-  slug: string
   description: string | null
   city: string
   location: string | null
@@ -34,15 +33,21 @@ export type AdminEventRow = {
   cover_image_url: string | null
   images: string[]
   cta_type: EventCtaType
-  cta_label: string | null
   cta_url: string | null
   cta_phone: string | null
+}
+
+export type AdminEventListItem = {
+  id: string
+  title: string
+  description: string | null
+  city: string
+  location: string | null
+  starts_at: string
+  cover_image_url: string | null
   status: EventStatus
-  created_at: string
-  updated_at: string
   categories: {
     name: string
-    slug: string
   } | null
 }
 
@@ -69,7 +74,11 @@ export function sanitizeStorageName(name: string) {
   return sanitized || "image"
 }
 
-export function buildEventCoverImagePath(eventId: string, extension: "jpg" | "webp", timestamp = Date.now()) {
+export function buildEventCoverImagePath(
+  eventId: string,
+  extension: "jpg" | "webp",
+  timestamp = Date.now()
+) {
   if (!isUuid(eventId)) {
     throw new Error("invalid_event_id")
   }
@@ -108,13 +117,23 @@ function tryDecodeStoragePath(path: string) {
 export function isEventImageStoragePath(path: string) {
   const decodedPath = tryDecodeStoragePath(path)
 
-  if (!decodedPath || decodedPath !== path || path.startsWith("/") || path.includes("\\") || path.includes("..")) {
+  if (
+    !decodedPath ||
+    decodedPath !== path ||
+    path.startsWith("/") ||
+    path.includes("\\") ||
+    path.includes("..")
+  ) {
     return false
   }
 
   const segments = path.split("/")
 
-  if (segments.some((segment) => segment.length === 0) || segments[0] !== "events" || !isUuid(segments[1] ?? "")) {
+  if (
+    segments.some((segment) => segment.length === 0) ||
+    segments[0] !== "events" ||
+    !isUuid(segments[1] ?? "")
+  ) {
     return false
   }
 
@@ -122,7 +141,11 @@ export function isEventImageStoragePath(path: string) {
     return eventCoverImageFilePattern.test(segments[2])
   }
 
-  return segments.length === 4 && segments[2] === "gallery" && eventGalleryImageFilePattern.test(segments[3])
+  return (
+    segments.length === 4 &&
+    segments[2] === "gallery" &&
+    eventGalleryImageFilePattern.test(segments[3])
+  )
 }
 
 export function formatDateTimeLocal(value: string | null) {
@@ -136,7 +159,9 @@ export function formatDateTimeLocal(value: string | null) {
     return ""
   }
 
-  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+  const offsetDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60_000
+  )
   return offsetDate.toISOString().slice(0, 16)
 }
 
@@ -154,5 +179,7 @@ export function getStoragePathFromPublicUrl(publicUrl: string) {
 
   const decodedPath = tryDecodeStoragePath(path)
 
-  return decodedPath && isEventImageStoragePath(decodedPath) ? decodedPath : null
+  return decodedPath && isEventImageStoragePath(decodedPath)
+    ? decodedPath
+    : null
 }
