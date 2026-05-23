@@ -8,12 +8,14 @@ export type CurrentAuth =
       status: "signed_in"
       role: "user" | "admin"
       fullName: string | null
+      avatarUrl: string | null
       destination: string
     }
 
 type ProfileRow = {
   role: "user" | "admin"
   full_name: string | null
+  avatar_url: string | null
 }
 
 export async function getCurrentAuth(supabase: SupabaseClient): Promise<CurrentAuth> {
@@ -27,7 +29,7 @@ export async function getCurrentAuth(supabase: SupabaseClient): Promise<CurrentA
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role,full_name")
+    .select("role,full_name,avatar_url")
     .eq("id", user.id)
     .maybeSingle<ProfileRow>()
 
@@ -39,6 +41,7 @@ export async function getCurrentAuth(supabase: SupabaseClient): Promise<CurrentA
     status: "signed_in",
     role: profile.role,
     fullName: profile.full_name,
+    avatarUrl: profile.avatar_url,
     destination: profile.role === "admin" ? "/admin" : "/",
   }
 }
