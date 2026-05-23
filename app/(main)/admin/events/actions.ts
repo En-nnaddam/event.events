@@ -293,36 +293,6 @@ export async function updateEventImages(
   return { ok: true, eventId }
 }
 
-export async function deleteCreatedEvent(
-  eventId: string
-): Promise<EventActionResult> {
-  if (!isUuid(eventId)) {
-    return fail("missing_event")
-  }
-
-  const { supabase } = await requireAdmin()
-  const { data: event } = await supabase
-    .from("events")
-    .select("cover_image_url,images")
-    .eq("id", eventId)
-    .maybeSingle<{ cover_image_url: string | null; images: string[] }>()
-
-  const { error } = await supabase.from("events").delete().eq("id", eventId)
-
-  if (error) {
-    return fail("delete_failed")
-  }
-
-  if (event) {
-    await removeImageUrls([event.cover_image_url, ...event.images])
-  }
-
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
-  return { ok: true }
-}
-
 export async function updateEventStatus(formData: FormData) {
   const eventId = getText(formData, "event_id")
   const status = getStatus(getText(formData, "status"))

@@ -5,12 +5,7 @@ import { EventForm } from "@/components/admin/event-form"
 import type { CategoryOption } from "@/lib/admin/events"
 import { createClient } from "@/lib/supabase/server"
 
-import {
-  cleanupEventImages,
-  createEvent,
-  deleteCreatedEvent,
-  updateEventImages,
-} from "../actions"
+import { cleanupEventImages, createEvent, updateEventImages } from "../actions"
 
 type NewEventPageProps = {
   searchParams: Promise<{
@@ -57,7 +52,6 @@ export default async function NewEventPage({
           cleanupAction={cleanupEventImages}
           error={params.error}
           imageAction={updateEventImages}
-          rollbackAction={deleteCreatedEvent}
         />
       </section>
     </main>

@@ -40,7 +40,6 @@ type EventFormProps = {
     eventId: string,
     formData: FormData
   ) => Promise<EventActionResult>
-  rollbackAction?: (eventId: string) => Promise<EventActionResult>
 }
 
 type ProgressStage =
@@ -134,7 +133,6 @@ export function EventForm({
   event,
   error,
   imageAction,
-  rollbackAction,
 }: EventFormProps) {
   const router = useRouter()
   const ctaInputRef = useRef<EventCtaInputHandle>(null)
@@ -248,41 +246,51 @@ export function EventForm({
 
     if (cover[0]) {
       setProgressDetail("Uploading cover image")
-      uploadedCover = await uploadPublicFile({
-        bucket: EVENT_IMAGE_BUCKET,
-        file: cover[0],
-        path: buildEventCoverImagePath(eventId, getImageExtension(cover[0])),
-      })
-      uploadedPaths.push(uploadedCover.path)
+      try {
+        uploadedCover = await uploadPublicFile({
+          bucket: EVENT_IMAGE_BUCKET,
+          file: cover[0],
+          path: buildEventCoverImagePath(eventId, getImageExtension(cover[0])),
+        })
+        uploadedPaths.push(uploadedCover.path)
+      } catch (error) {
+        return {
+          error: error instanceof Error ? error.message : "upload_failed",
+          uploadedCover,
+          uploadedGallery,
+          uploadedPaths,
+        }
+      }
     }
 
     for (const [index, file] of gallery.entries()) {
       setProgressDetail(
         `Uploading gallery image ${index + 1} of ${gallery.length}`
       )
-      const uploaded = await uploadPublicFile({
-        bucket: EVENT_IMAGE_BUCKET,
-        file,
-        path: buildEventGalleryImagePath({
-          eventId,
-          extension: getImageExtension(file),
-          fileName: file.name,
-          index: index + 1,
-        }),
-      })
-      uploadedGallery.push(uploaded)
-      uploadedPaths.push(uploaded.path)
+      try {
+        const uploaded = await uploadPublicFile({
+          bucket: EVENT_IMAGE_BUCKET,
+          file,
+          path: buildEventGalleryImagePath({
+            eventId,
+            extension: getImageExtension(file),
+            fileName: file.name,
+            index: index + 1,
+          }),
+        })
+        uploadedGallery.push(uploaded)
+        uploadedPaths.push(uploaded.path)
+      } catch (error) {
+        return {
+          error: error instanceof Error ? error.message : "upload_failed",
+          uploadedCover,
+          uploadedGallery,
+          uploadedPaths,
+        }
+      }
     }
 
     return { uploadedCover, uploadedGallery, uploadedPaths }
-  }
-
-  async function rollbackCreatedEvent(eventId: string) {
-    if (!rollbackAction) {
-      return
-    }
-
-    await rollbackAction(eventId)
   }
 
   async function handleSubmit(submitEvent: React.FormEvent<HTMLFormElement>) {
@@ -293,9 +301,6 @@ export function EventForm({
     }
 
     const form = submitEvent.currentTarget
-    const uploadedPaths: string[] = []
-    let createdEventId: string | null = null
-
     setSubmitError(null)
     setOptimizationSummary(null)
     setProgressStage("validating")
@@ -329,38 +334,32 @@ export function EventForm({
     formData.delete("images")
     formData.delete("removed_image_urls")
 
+    if (!event) {
+      await handleCreateSubmit(formData)
+      return
+    }
+
+    await handleEditSubmit(formData, event)
+  }
+
+  async function appendImageUrls({
+    eventId,
+    formData,
+    optimizedCoverFiles,
+    optimizedGalleryFiles,
+  }: {
+    eventId: string
+    formData: FormData
+    optimizedCoverFiles: File[]
+    optimizedGalleryFiles: File[]
+  }) {
+    const uploadedPaths: string[] = []
+
     try {
-      setProgressStage("optimizing")
-      const optimizedCoverFiles = await optimizeFiles(coverFiles)
-      const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
-
-      let eventId = event?.id ?? null
-
-      if (!event) {
-        setProgressStage("saving")
-        setProgressDetail("Creating event record.")
-        const result = await action(formData)
-
-        if (!result.ok || !result.eventId) {
-          setProgressStage("error")
-          setSubmitError(result.error ?? "save_failed")
-          return
-        }
-
-        eventId = result.eventId
-        createdEventId = result.eventId
-      }
-
-      if (!eventId) {
-        setProgressStage("error")
-        setSubmitError("missing_event")
-        return
-      }
-
       setProgressStage("uploading")
       const uploadedImages = await uploadImages({
-        cover: optimizedCoverFiles,
         eventId,
+        cover: optimizedCoverFiles,
         gallery: optimizedGalleryFiles,
       })
       uploadedPaths.push(...uploadedImages.uploadedPaths)
@@ -389,26 +388,111 @@ export function EventForm({
         formData.append("removed_image_urls", url)
       )
 
+      return {
+        error: uploadedImages.error,
+        ok: !uploadedImages.error,
+        uploadedPaths,
+      } as const
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : "upload_failed",
+        ok: false,
+        uploadedPaths,
+      } as const
+    }
+  }
+
+  async function handleCreateSubmit(formData: FormData) {
+    setProgressStage("saving")
+    setProgressDetail("Creating event record.")
+    const createResult = await action(formData)
+
+    if (!createResult.ok || !createResult.eventId) {
+      setProgressStage("error")
+      setSubmitError(createResult.error ?? "save_failed")
+      return
+    }
+
+    const eventId = createResult.eventId
+    const imageFormData = new FormData()
+
+    try {
+      setProgressStage("optimizing")
+      const optimizedCoverFiles = await optimizeFiles(coverFiles)
+      const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
+      const imageResult = await appendImageUrls({
+        eventId,
+        formData: imageFormData,
+        optimizedCoverFiles,
+        optimizedGalleryFiles,
+      })
+
+      if (!imageResult.ok) {
+        if (imageResult.uploadedPaths.length > 0 && imageAction) {
+          await imageAction(eventId, imageFormData)
+        }
+
+        router.push("/admin/events/" + eventId + "/edit?error=upload_failed")
+        router.refresh()
+        return
+      }
+
+      if (imageAction) {
+        setProgressStage("saving")
+        setProgressDetail("Saving event images to the database.")
+        const updateImagesResult = await imageAction(eventId, imageFormData)
+
+        if (!updateImagesResult.ok) {
+          router.push(
+            `/admin/events/${eventId}/edit?error=${updateImagesResult.error ?? "upload_failed"}`
+          )
+          router.refresh()
+          return
+        }
+      }
+
+      setProgressStage("done")
+      setProgressDetail("Redirecting to events management.")
+      router.push("/admin/events")
+      router.refresh()
+    } catch {
+      router.push("/admin/events/" + eventId + "/edit?error=upload_failed")
+      router.refresh()
+    }
+  }
+
+  async function handleEditSubmit(
+    formData: FormData,
+    currentEvent: AdminEventRow
+  ) {
+    const uploadedPaths: string[] = []
+
+    try {
+      setProgressStage("optimizing")
+      const optimizedCoverFiles = await optimizeFiles(coverFiles)
+      const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
+      const imageResult = await appendImageUrls({
+        eventId: currentEvent.id,
+        formData,
+        optimizedCoverFiles,
+        optimizedGalleryFiles,
+      })
+
+      if (!imageResult.ok) {
+        await cleanupUploadedImages(imageResult.uploadedPaths)
+        setProgressStage("error")
+        setSubmitError(imageResult.error ?? "upload_failed")
+        return
+      }
+
+      uploadedPaths.push(...imageResult.uploadedPaths)
+
       setProgressStage("saving")
       setProgressDetail("Saving event details to the database.")
-      let result: EventActionResult
-
-      if (event) {
-        result = await action(formData)
-      } else if (imageAction) {
-        result = await imageAction(eventId, formData)
-      } else {
-        result =
-          uploadedPaths.length === 0
-            ? { ok: true }
-            : { ok: false, error: "save_failed" }
-      }
+      const result = await action(formData)
 
       if (!result.ok) {
         await cleanupUploadedImages(uploadedPaths)
-        if (createdEventId) {
-          await rollbackCreatedEvent(createdEventId)
-        }
         setProgressStage("error")
         setSubmitError(result.error ?? "save_failed")
         return
@@ -420,9 +504,6 @@ export function EventForm({
       router.refresh()
     } catch (error) {
       await cleanupUploadedImages(uploadedPaths)
-      if (createdEventId) {
-        await rollbackCreatedEvent(createdEventId)
-      }
       setProgressStage("error")
       setSubmitError(error instanceof Error ? error.message : "upload_failed")
     }
