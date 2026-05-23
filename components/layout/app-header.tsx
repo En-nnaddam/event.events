@@ -1,33 +1,15 @@
 import Link from "next/link"
-import { UserIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 
+import { AuthAvatar } from "@/components/auth/auth-avatar"
 import { LogoutForm } from "@/components/auth/logout-form"
 import { buttonVariants } from "@/components/ui/button"
 import { getCurrentAuth } from "@/lib/auth/current"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
 
-function getInitials(name: string | null) {
-  const words = name
-    ?.trim()
-    .split(/\s+/)
-    .filter(Boolean)
-
-  if (!words?.length) {
-    return null
-  }
-
-  return words
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join("")
-}
-
 export async function AppHeader() {
   const supabase = await createClient()
   const currentAuth = await getCurrentAuth(supabase)
-  const initials = currentAuth.status === "signed_in" ? getInitials(currentAuth.fullName) : null
 
   return (
     <header className="border-b border-border bg-background/95">
@@ -48,28 +30,11 @@ export async function AppHeader() {
                     "border-primary/35 bg-primary/5 ring-1 ring-primary/15 hover:bg-primary/10"
                 )}
               >
-                <span
-                  className={cn(
-                    "grid size-8 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-xs font-semibold text-muted-foreground",
-                    currentAuth.role === "admin" &&
-                      "border-primary/35 bg-primary text-primary-foreground"
-                  )}
-                  aria-hidden="true"
-                >
-                  {currentAuth.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- Provider avatar domains are intentionally not constrained to next/image remotePatterns.
-                    <img
-                      src={currentAuth.avatarUrl}
-                      alt=""
-                      className="size-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : initials ? (
-                    initials
-                  ) : (
-                    <HugeiconsIcon icon={UserIcon} strokeWidth={2} className="size-4" />
-                  )}
-                </span>
+                <AuthAvatar
+                  avatarUrl={currentAuth.avatarUrl}
+                  fullName={currentAuth.fullName}
+                  isAdmin={currentAuth.role === "admin"}
+                />
                 <span className="flex min-w-0 flex-col items-start leading-tight">
                   <span className="flex max-w-40 items-center gap-1.5">
                     <span className="truncate text-sm font-semibold text-foreground">
