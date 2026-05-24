@@ -14,6 +14,7 @@ const EVENT_COLUMNS = `
   title,
   description,
   city,
+  country_code,
   location,
   starts_at,
   ends_at,

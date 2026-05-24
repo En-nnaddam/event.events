@@ -27,6 +27,7 @@ export type EventFormEvent = {
   title: string
   description: string | null
   city: string
+  country_code: string | null
   location: string | null
   starts_at: string
   ends_at: string | null
@@ -42,6 +43,7 @@ export type AdminEventListItem = {
   title: string
   description: string | null
   city: string
+  country_code: string | null
   location: string | null
   starts_at: string
   cover_image_url: string | null

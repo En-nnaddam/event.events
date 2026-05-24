@@ -38,6 +38,7 @@ export default async function EditEventPage({
           title,
           description,
           city,
+          country_code,
           location,
           starts_at,
           ends_at,

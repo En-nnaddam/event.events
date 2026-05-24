@@ -202,6 +202,7 @@ create table public.events (
   description text,
 
   city text not null,
+  country_code text,
   location text,
 
   starts_at timestamptz not null,
@@ -222,6 +223,11 @@ create table public.events (
 
   constraint events_dates_check check (
     ends_at is null or ends_at >= starts_at
+  ),
+
+  constraint events_country_code_check check (
+    country_code is null
+    or country_code ~ '^[A-Z]{2}$'
   ),
 
   constraint events_cta_external_link_check check (
@@ -446,6 +452,7 @@ create index categories_slug_idx on public.categories(slug);
 create index events_slug_idx on public.events(slug);
 create index events_status_idx on public.events(status);
 create index events_city_idx on public.events(city);
+create index events_country_code_idx on public.events(country_code);
 create index events_category_id_idx on public.events(category_id);
 create index events_starts_at_idx on public.events(starts_at);
 create index events_cta_type_idx on public.events(cta_type);
@@ -515,6 +522,7 @@ title
 slug
 description
 city
+country_code
 location
 starts_at
 ends_at
@@ -570,4 +578,3 @@ Possible organizer rules:
 - Organizer can edit own rejected or pending events.
 - Admin can publish, reject, archive, or edit all events.
 - Public can only read published events.
-

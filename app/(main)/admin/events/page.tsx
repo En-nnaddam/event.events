@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { CountryFlag, getCountryOption } from "@/lib/countries"
 import { createClient } from "@/lib/supabase/server"
 
 import { deleteEvent, updateEventStatus } from "./actions"
@@ -87,6 +88,7 @@ export default async function AdminEventsPage({
         title,
         description,
         city,
+        country_code,
         location,
         starts_at,
         cover_image_url,
@@ -233,9 +235,21 @@ export default async function AdminEventsPage({
                     {event.description || "No description added."}
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {event.location
-                      ? `${event.location}, ${event.city}`
-                      : event.city}
+                    <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5">
+                      <CountryFlag
+                        code={event.country_code}
+                        className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
+                      />
+                      <span>
+                        {[
+                          event.location,
+                          event.city,
+                          getCountryOption(event.country_code)?.name,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </span>
+                    </span>
                   </p>
                 </div>
                 <div className="flex flex-wrap items-start gap-2 lg:justify-end">

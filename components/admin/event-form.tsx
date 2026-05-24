@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { CountryCombobox } from "@/components/admin/country-combobox"
 import { DatePicker } from "@/components/admin/date-picker"
 import {
   EventCtaInput,
@@ -62,6 +63,7 @@ const errorMessages: Record<string, string> = {
   invalid_image_type: "Upload PNG, JPG, or WebP images only.",
   invalid_cta_phone: "Use digits only for phone and WhatsApp CTAs.",
   invalid_cta_url: "Use a valid HTTP or HTTPS URL.",
+  invalid_country: "Select a valid country from the list.",
   missing_cta_phone: "Phone and WhatsApp CTAs require a phone number.",
   missing_cta_url: "External link CTAs require a URL.",
   missing_event: "The selected event could not be found.",
@@ -584,6 +586,10 @@ export function EventForm({
               defaultValue={event?.city ?? ""}
               required
             />
+          </Field>
+
+          <Field label="Country">
+            <CountryCombobox defaultValue={event?.country_code} />
           </Field>
 
           <Field label="Location">

@@ -14,6 +14,7 @@ import {
   type EventCtaType,
   type EventStatus,
 } from "@/lib/admin/events"
+import { isCountryCode, normalizeCountryCode } from "@/lib/country-data"
 
 type EventPayload = {
   category_id: string
@@ -21,6 +22,7 @@ type EventPayload = {
   slug: string
   description: string | null
   city: string
+  country_code: string | null
   location: string | null
   starts_at: string
   ends_at: string | null
@@ -83,6 +85,7 @@ function parseEventPayload(
   const slug = slugify(title)
   const categoryId = getText(formData, "category_id")
   const city = getText(formData, "city")
+  const countryCodeValue = getText(formData, "country_code")
   const startsAtValue = getText(formData, "starts_at")
   const endsAtValue = getText(formData, "ends_at")
   const ctaType = getCtaType(getText(formData, "cta_type"))
@@ -93,6 +96,14 @@ function parseEventPayload(
 
   if (!isUuid(categoryId)) {
     return { error: "missing_fields" }
+  }
+
+  const countryCode = countryCodeValue
+    ? normalizeCountryCode(countryCodeValue)
+    : null
+
+  if (countryCode && !isCountryCode(countryCode)) {
+    return { error: "invalid_country" }
   }
 
   const startsAt = new Date(startsAtValue)
@@ -138,6 +149,7 @@ function parseEventPayload(
     slug,
     description: getNullableText(formData, "description"),
     city,
+    country_code: countryCode,
     location: getNullableText(formData, "location"),
     starts_at: startsAt.toISOString(),
     ends_at: endsAt ? endsAt.toISOString() : null,

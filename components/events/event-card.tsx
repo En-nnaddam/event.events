@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 
 import { getEventCtaLabel, type EventCtaType } from "@/lib/admin/events"
+import { CountryFlag, getCountryOption } from "@/lib/countries"
 import { cn } from "@/lib/utils"
 
 export type EventFeedItem = {
@@ -11,6 +12,7 @@ export type EventFeedItem = {
   title: string
   description: string | null
   city: string
+  country_code: string | null
   location: string | null
   starts_at: string
   ends_at: string | null
@@ -300,6 +302,7 @@ function ImageModal({
 
 export function EventCard({ event }: { event: EventFeedItem }) {
   const cta = getCta(event)
+  const country = getCountryOption(event.country_code)
   const galleryImages = event.images.filter(
     (image) => image && image !== event.cover_image_url
   )
@@ -381,7 +384,15 @@ export function EventCard({ event }: { event: EventFeedItem }) {
             </span>
           ) : null}
           <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
-            {event.city}
+            <span className="inline-flex items-center gap-1.5">
+              <CountryFlag
+                code={event.country_code}
+                className="h-3.5 w-5 rounded-[2px] shadow-sm ring-1 ring-border/70"
+              />
+              <span>
+                {country ? `${event.city}, ${country.name}` : event.city}
+              </span>
+            </span>
           </span>
         </div>
 
@@ -407,7 +418,17 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           <div className="rounded-md border border-border/70 bg-surface-raised p-3">
             <dt className="font-medium text-foreground">Place</dt>
             <dd className="mt-1 leading-5 wrap-anywhere text-muted-foreground">
-              {event.location ? `${event.location}, ${event.city}` : event.city}
+              <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5">
+                <CountryFlag
+                  code={event.country_code}
+                  className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
+                />
+                <span>
+                  {[event.location, event.city, country?.name]
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+              </span>
             </dd>
           </div>
         </dl>
