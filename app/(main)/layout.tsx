@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/layout/app-header"
+import { Header } from "@/components/layout/header"
 
 export default function MainLayout({
   children,
@@ -7,7 +7,7 @@ export default function MainLayout({
 }>) {
   return (
     <>
-      <AppHeader />
+      <Header />
       {children}
     </>
   )

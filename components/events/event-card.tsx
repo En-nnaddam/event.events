@@ -399,14 +399,14 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         <dl className="grid gap-3 text-sm md:grid-cols-2">
           <div className="rounded-md border border-border/70 bg-surface-raised p-3">
             <dt className="font-medium text-foreground">Date</dt>
-            <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
+            <dd className="mt-1 leading-5 wrap-anywhere text-muted-foreground">
               {formatDateRange(event)}
             </dd>
           </div>
 
           <div className="rounded-md border border-border/70 bg-surface-raised p-3">
             <dt className="font-medium text-foreground">Place</dt>
-            <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
+            <dd className="mt-1 leading-5 wrap-anywhere text-muted-foreground">
               {event.location ? `${event.location}, ${event.city}` : event.city}
             </dd>
           </div>

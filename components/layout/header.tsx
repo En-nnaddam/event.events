@@ -6,12 +6,12 @@ import { buttonVariants } from "@/components/ui/button"
 import { getCurrentAuth } from "@/lib/auth/current"
 import { createClient } from "@/lib/supabase/server"
 
-export async function AppHeader() {
+export async function Header() {
   const supabase = await createClient()
   const currentAuth = await getCurrentAuth(supabase)
 
   return (
-    <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex min-h-16 max-w-6xl gap-3 px-5 py-3 sm:flex-row items-center justify-between sm:px-6 lg:px-8">
         <Link href="/" className="text-base font-semibold tracking-normal text-foreground">
           Event.Events
