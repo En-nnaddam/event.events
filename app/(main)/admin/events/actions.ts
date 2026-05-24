@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { requireAdmin } from "@/lib/admin/auth"
 import {
   EVENT_IMAGE_BUCKET,
+  formatDateTimeLocal,
   getEventCtaLabel,
   getStoragePathFromPublicUrl,
   isEventImageStoragePath,
@@ -80,6 +81,39 @@ function isHttpUrl(value: string) {
   } catch {
     return false
   }
+}
+
+function getDateDayStart(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function getTodayStart() {
+  return getDateDayStart(new Date())
+}
+
+function isBeforeToday(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return false
+  }
+
+  return getDateDayStart(date) < getTodayStart()
+}
+
+function isUnchangedDateTime(
+  nextValue: string | null,
+  currentValue: string | null
+) {
+  return formatDateTimeLocal(nextValue) === formatDateTimeLocal(currentValue)
+}
+
+function isNewPastDate(nextValue: string | null, currentValue: string | null) {
+  if (!nextValue) {
+    return false
+  }
+
+  return !isUnchangedDateTime(nextValue, currentValue) && isBeforeToday(nextValue)
 }
 
 function parseEventPayloadDetails(
@@ -198,6 +232,10 @@ export async function createEvent(
     return fail(payloadDetails.error)
   }
 
+  if (isBeforeToday(payloadDetails.starts_at)) {
+    return fail("past_date")
+  }
+
   const slug = slugifyId(payloadDetails.title)
 
   if (!slug) {
@@ -246,17 +284,26 @@ export async function updateEvent(
 
   const { data: currentEvent } = await supabase
     .from("events")
-    .select("title,slug,cover_image_url,images")
+    .select("title,slug,starts_at,ends_at,cover_image_url,images")
     .eq("id", eventId)
     .maybeSingle<{
       title: string
       slug: string
+      starts_at: string
+      ends_at: string | null
       cover_image_url: string | null
       images: string[]
     }>()
 
   if (!currentEvent) {
     return fail("missing_event")
+  }
+
+  if (
+    isNewPastDate(payloadDetails.starts_at, currentEvent.starts_at) ||
+    isNewPastDate(payloadDetails.ends_at, currentEvent.ends_at)
+  ) {
+    return fail("past_date")
   }
 
   const slug =

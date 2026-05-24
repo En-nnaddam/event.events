@@ -10,7 +10,9 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 type DatePickerProps = {
+  allowPastValue?: boolean
   error?: string
+  minDate?: Date
   name: string
   onChange: (value: string) => void
   required?: boolean
@@ -88,7 +90,15 @@ function buildDateTime(date: Date | undefined, timeValue: string) {
   return `${formatDateValue(date)}T${time.hour}:${time.minute}`
 }
 
-export function DatePicker({ error, name, onChange, required, value }: DatePickerProps) {
+export function DatePicker({
+  allowPastValue = false,
+  error,
+  minDate,
+  name,
+  onChange,
+  required,
+  value,
+}: DatePickerProps) {
   const initialValue = useMemo(() => splitDateTime(value), [value])
   const [dateOpen, setDateOpen] = useState(false)
   const [timeOpen, setTimeOpen] = useState(false)
@@ -98,6 +108,7 @@ export function DatePicker({ error, name, onChange, required, value }: DatePicke
   const timeError = Boolean(timeValue && !parseTime(timeValue))
   const hasError = Boolean(error || timeError)
   const errorId = error ? `${name}-error` : undefined
+  const disabledDates = minDate ? { before: minDate } : undefined
 
   function syncValue(nextDate: Date | undefined, nextTimeValue: string) {
     const nextValue = buildDateTime(nextDate, nextTimeValue)
@@ -108,6 +119,15 @@ export function DatePicker({ error, name, onChange, required, value }: DatePicke
   }
 
   function updateDate(nextDate: Date | undefined) {
+    if (
+      nextDate &&
+      minDate &&
+      nextDate < minDate &&
+      (!allowPastValue || nextDate.getTime() !== initialValue.date?.getTime())
+    ) {
+      return
+    }
+
     setSelectedDate(nextDate)
     setDateOpen(false)
     syncValue(nextDate, timeValue)
@@ -151,7 +171,13 @@ export function DatePicker({ error, name, onChange, required, value }: DatePicke
             </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">
-            <Calendar mode="single" selected={selectedDate} onSelect={updateDate} captionLayout="dropdown" />
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={updateDate}
+              disabled={disabledDates}
+              captionLayout="dropdown"
+            />
           </PopoverContent>
         </Popover>
 

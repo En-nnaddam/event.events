@@ -69,6 +69,7 @@ const errorMessages: Record<string, string> = {
   missing_event: "The selected event could not be found.",
   generating_slug_failed: "Could not generate a valid slug for the event. Please try again.",
   missing_fields: "Fill in the required event fields.",
+  past_date: "Use today or a future date.",
   save_failed: "The event could not be saved.",
   upload_failed: "One or more images could not be uploaded.",
 }
@@ -129,6 +130,12 @@ function getImageExtension(file: File) {
   return file.type === "image/webp" ? "webp" : "jpg"
 }
 
+function getTodayStart() {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return today
+}
+
 export function EventForm({
   action,
   categories,
@@ -139,6 +146,7 @@ export function EventForm({
 }: EventFormProps) {
   const router = useRouter()
   const ctaInputRef = useRef<EventCtaInputHandle>(null)
+  const minEventDate = useMemo(() => getTodayStart(), [])
   const [title, setTitle] = useState(event?.title ?? "")
   const {
     endsAt,
@@ -609,6 +617,8 @@ export function EventForm({
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Starts at" required>
               <DatePicker
+                allowPastValue={Boolean(event)}
+                minDate={minEventDate}
                 name="starts_at"
                 value={startsAt}
                 onChange={handleStartsAtChange}
@@ -618,12 +628,14 @@ export function EventForm({
 
             <Field label="Ends at">
               <DatePicker
+                allowPastValue={Boolean(event)}
                 key={endsAtPickerKey}
                 error={
                   hasInvalidEndDate
                     ? "End date must be after the start date."
                     : undefined
                 }
+                minDate={minEventDate}
                 name="ends_at"
                 value={endsAt}
                 onChange={handleEndsAtChange}
