@@ -1,7 +1,16 @@
 "use client"
 
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Calendar01Icon,
+  Cancel01Icon,
+  Clock01Icon,
+  Location01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type CSSProperties } from "react"
 
 import { getEventCtaLabel, type EventCtaType } from "@/lib/admin/events"
 import { CountryFlag, getCountryOption } from "@/lib/countries"
@@ -26,27 +35,25 @@ export type EventFeedItem = {
   } | null
 }
 
-const dateFormatter = new Intl.DateTimeFormat("en", {
+const detailDateFormatter = new Intl.DateTimeFormat("en", {
   weekday: "short",
   month: "short",
   day: "numeric",
   year: "numeric",
+})
+
+const detailTimeFormatter = new Intl.DateTimeFormat("en", {
   hour: "numeric",
   minute: "2-digit",
 })
 
-function formatEventDate(value: string) {
-  return dateFormatter.format(new Date(value))
-}
+function formatEventDateTime(value: string) {
+  const date = new Date(value)
 
-function formatDateRange(event: EventFeedItem) {
-  const startsAt = formatEventDate(event.starts_at)
-
-  if (!event.ends_at) {
-    return startsAt
+  return {
+    date: detailDateFormatter.format(date),
+    time: detailTimeFormatter.format(date),
   }
-
-  return `${startsAt} - ${formatEventDate(event.ends_at)}`
 }
 
 function getCta(event: EventFeedItem) {
@@ -86,6 +93,8 @@ function EventImage({
   alt,
   src,
   className,
+  dynamicAspect = false,
+  imageClassName,
   onOpen,
   sizes,
   title,
@@ -93,15 +102,25 @@ function EventImage({
   alt: string
   src: string | null
   className?: string
+  dynamicAspect?: boolean
+  imageClassName?: string
   onOpen?: () => void
   sizes: string
   title: string
 }) {
+  const [imageAspect, setImageAspect] = useState<{
+    ratio: number
+    src: string
+  } | null>(null)
+  const aspectRatio = imageAspect?.src === src ? imageAspect.ratio : null
+  const imageStyle: CSSProperties | undefined =
+    dynamicAspect && aspectRatio ? { aspectRatio: String(aspectRatio) } : undefined
+
   if (!src) {
     return (
       <div
         className={cn(
-          "flex min-h-56 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
+          "flex min-h-72 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
           className
         )}
       >
@@ -118,16 +137,75 @@ function EventImage({
         "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
+      style={imageStyle}
       aria-label={`Open ${title}`}
     >
+      {dynamicAspect ? (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes={sizes}
+          className="scale-105 object-cover opacity-35 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-30"
+          aria-hidden="true"
+        />
+      ) : null}
       <Image
         src={src}
         alt={alt}
         fill
         sizes={sizes}
-        className="object-cover transition duration-200 group-hover:scale-[1.03]"
+        className={cn(
+          "transition duration-200 group-hover:scale-[1.02]",
+          imageClassName ?? "object-cover"
+        )}
+        onLoad={(event) => {
+          if (!dynamicAspect) {
+            return
+          }
+
+          const image = event.currentTarget
+
+          if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+            setImageAspect({
+              ratio: image.naturalWidth / image.naturalHeight,
+              src,
+            })
+          }
+        }}
       />
     </button>
+  )
+}
+
+function DetailIcon({
+  icon,
+}: {
+  icon: typeof Calendar01Icon
+}) {
+  return (
+    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/70 text-primary dark:text-accent-warm">
+      <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
+    </span>
+  )
+}
+
+function DateLine({ label, value }: { label: string; value: string }) {
+  const dateTime = formatEventDateTime(value)
+
+  return (
+    <div className="grid gap-0.5">
+      <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
+        {label}
+      </dt>
+      <dd className="leading-5 wrap-anywhere">
+        <span className="font-medium text-foreground">{dateTime.date}</span>
+        <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
+          <HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-3.5" />
+          {dateTime.time}
+        </span>
+      </dd>
+    </div>
   )
 }
 
@@ -229,10 +307,10 @@ function ImageModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-white/10 px-3 text-sm font-medium transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-white/10 text-sm font-medium transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
             aria-label="Close image preview"
           >
-            X
+            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
           </button>
         </div>
 
@@ -279,18 +357,18 @@ function ImageModal({
                 onClick={() =>
                   onSelect((activeIndex - 1 + images.length) % images.length)
                 }
-                className="absolute top-1/2 left-3 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="absolute top-1/2 left-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
                 aria-label="Show previous image"
               >
-                Previous
+                <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
               </button>
               <button
                 type="button"
                 onClick={() => onSelect((activeIndex + 1) % images.length)}
-                className="absolute top-1/2 right-3 inline-flex h-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 px-3 text-sm font-medium text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+                className="absolute top-1/2 right-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
                 aria-label="Show next image"
               >
-                Next
+                <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-5" />
               </button>
             </>
           ) : null}
@@ -303,6 +381,7 @@ function ImageModal({
 export function EventCard({ event }: { event: EventFeedItem }) {
   const cta = getCta(event)
   const country = getCountryOption(event.country_code)
+  const eventLocation = [event.city, country?.name].filter(Boolean).join(", ")
   const galleryImages = event.images.filter(
     (image) => image && image !== event.cover_image_url
   )
@@ -344,14 +423,16 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   }
 
   return (
-    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card p-4 shadow-lg shadow-black/15 md:grid-cols-[minmax(220px,0.42fr)_1fr] md:p-5">
+    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card p-4 shadow-lg shadow-black/15 lg:grid-cols-[minmax(300px,0.55fr)_1fr] lg:p-5">
       <div className="grid min-w-0 gap-3">
         <EventImage
           alt={`${event.title} cover image`}
           src={event.cover_image_url}
           title={`${event.title} cover image`}
-          sizes="(max-width: 768px) calc(100vw - 2rem), 38vw"
-          className="aspect-video min-h-0 md:aspect-auto md:min-h-56"
+          sizes="(max-width: 1024px) calc(100vw - 2rem), 42vw"
+          className="aspect-[4/3] min-h-72 max-h-[34rem] md:min-h-80 lg:min-h-96 lg:max-h-[38rem]"
+          dynamicAspect
+          imageClassName="object-contain"
           onOpen={
             event.cover_image_url ? () => setActiveImageIndex(0) : undefined
           }
@@ -365,8 +446,9 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 alt={`${event.title} gallery image ${index + 1}`}
                 src={image}
                 title={`${event.title} gallery image ${index + 1}`}
-                sizes="9rem"
-                className="h-24 min-h-24 w-36 shrink-0 snap-start rounded-md"
+                sizes="7rem"
+                className="aspect-square size-24 min-h-0 shrink-0 snap-start rounded-md sm:size-28"
+                imageClassName="object-cover"
                 onOpen={() =>
                   setActiveImageIndex(event.cover_image_url ? index + 1 : index)
                 }
@@ -408,28 +490,37 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         </div>
 
         <dl className="grid gap-3 text-sm md:grid-cols-2">
-          <div className="rounded-md border border-border/70 bg-surface-raised p-3">
-            <dt className="font-medium text-foreground">Date</dt>
-            <dd className="mt-1 leading-5 wrap-anywhere text-muted-foreground">
-              {formatDateRange(event)}
-            </dd>
+          <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+            <DetailIcon icon={Calendar01Icon} />
+            <div className="grid min-w-0 gap-3">
+              <DateLine label="Starts" value={event.starts_at} />
+              {event.ends_at ? (
+                <DateLine label="Ends" value={event.ends_at} />
+              ) : null}
+            </div>
           </div>
 
-          <div className="rounded-md border border-border/70 bg-surface-raised p-3">
-            <dt className="font-medium text-foreground">Place</dt>
-            <dd className="mt-1 leading-5 wrap-anywhere text-muted-foreground">
-              <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5">
-                <CountryFlag
-                  code={event.country_code}
-                  className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
-                />
-                <span>
-                  {[event.location, event.city, country?.name]
-                    .filter(Boolean)
-                    .join(", ")}
+          <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+            <DetailIcon icon={Location01Icon} />
+            <div className="min-w-0">
+              <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
+                Place
+              </dt>
+              <dd className="mt-1 grid gap-1 leading-5 wrap-anywhere">
+                {event.location ? (
+                  <span className="font-medium text-foreground">
+                    {event.location}
+                  </span>
+                ) : null}
+                <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-muted-foreground">
+                  <CountryFlag
+                    code={event.country_code}
+                    className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
+                  />
+                  <span>{eventLocation || event.city}</span>
                 </span>
-              </span>
-            </dd>
+              </dd>
+            </div>
           </div>
         </dl>
 
