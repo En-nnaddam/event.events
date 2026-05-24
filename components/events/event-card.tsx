@@ -50,8 +50,43 @@ const detailTimeFormatter = new Intl.DateTimeFormat("en", {
 
 const rtlTextPattern = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/
 
+type EventDateStatus = "ended" | "today" | "upcoming"
+
 function hasRtlText(value: string | null | undefined) {
   return Boolean(value && rtlTextPattern.test(value))
+}
+
+function getLocalDayStart(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function isSameLocalDay(firstDate: Date, secondDate: Date) {
+  return getLocalDayStart(firstDate).getTime() === getLocalDayStart(secondDate).getTime()
+}
+
+function isLocalDayBetween(date: Date, startsAt: Date, endsAt: Date) {
+  const dayStart = getLocalDayStart(date).getTime()
+
+  return (
+    dayStart >= getLocalDayStart(startsAt).getTime() &&
+    dayStart <= getLocalDayStart(endsAt).getTime()
+  )
+}
+
+function getEventDateStatus(event: EventFeedItem, now = new Date()): EventDateStatus {
+  const startsAt = new Date(event.starts_at)
+  const endsAt = event.ends_at ? new Date(event.ends_at) : null
+  const eventEnd = endsAt ?? startsAt
+
+  if (now > eventEnd) {
+    return "ended"
+  }
+
+  if (endsAt ? isLocalDayBetween(now, startsAt, endsAt) : isSameLocalDay(now, startsAt)) {
+    return "today"
+  }
+
+  return "upcoming"
 }
 
 function formatEventDateTime(value: string) {
@@ -213,6 +248,43 @@ function DateLine({ label, value }: { label: string; value: string }) {
         </span>
       </dd>
     </div>
+  )
+}
+
+function EventStatusChip({ status }: { status: EventDateStatus }) {
+  const statusConfig: Record<
+    EventDateStatus,
+    {
+      className: string
+      label: string
+    }
+  > = {
+    ended: {
+      className: "border-border/70 bg-muted text-muted-foreground",
+      label: "Ended",
+    },
+    today: {
+      className:
+        "border-accent-warm/35 bg-accent text-accent-foreground dark:bg-accent-warm/20 dark:text-accent-warm",
+      label: "Today",
+    },
+    upcoming: {
+      className: "border-border/70 bg-secondary text-secondary-foreground",
+      label: "Upcoming",
+    },
+  }
+  const config = statusConfig[status]
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1",
+        config.className
+      )}
+    >
+      <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
+      {config.label}
+    </span>
   )
 }
 
@@ -395,6 +467,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   const hasImages = Boolean(event.cover_image_url || galleryImages.length > 0)
   const imageCount = (event.cover_image_url ? 1 : 0) + galleryImages.length
   const hasRtlContent = hasRtlText(event.title) || hasRtlText(event.description)
+  const dateStatus = getEventDateStatus(event)
   const imageItems = useMemo<EventImageItem[]>(() => {
     const coverImage = event.cover_image_url
       ? [
@@ -476,6 +549,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 {event.categories.name}
               </span>
             ) : null}
+            <EventStatusChip status={dateStatus} />
             <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <CountryFlag
