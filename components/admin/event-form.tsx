@@ -3,13 +3,13 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { CountryCombobox } from "@/components/admin/country-combobox"
 import { DatePicker } from "@/components/admin/date-picker"
 import {
   EventCtaInput,
   type EventCtaInputHandle,
 } from "@/components/admin/event-cta-input"
 import { ImageSelector } from "@/components/admin/image-selector"
+import { CountryCombobox } from "@/components/ui/country-combobox"
 import { useEventDateRange } from "@/hooks/use-event-date-range"
 import {
   buildEventCoverImagePath,
@@ -590,7 +590,10 @@ export function EventForm({
             </Field>
 
             <Field label="Country">
-              <CountryCombobox defaultValue={event?.country_code} />
+              <CountryCombobox
+                defaultValue={event?.country_code}
+                name="country_code"
+              />
             </Field>
           </div>
 

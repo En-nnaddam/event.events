@@ -13,6 +13,15 @@ import {
 } from "@/lib/countries"
 import { cn } from "@/lib/utils"
 
+type CountryComboboxProps = {
+  ariaLabel?: string
+  defaultValue?: string | null
+  name?: string
+  onValueChange?: (countryCode: string | null) => void
+  placeholder?: string
+  value?: string | null
+}
+
 const inputClassName =
   "min-h-10 w-full rounded-md border border-border bg-background py-2 text-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/30"
 
@@ -21,27 +30,44 @@ function countryMatches(country: CountryOption, query: string) {
 }
 
 export function CountryCombobox({
+  ariaLabel = "Country",
   defaultValue,
-  name = "country_code",
-}: {
-  defaultValue?: string | null
-  name?: string
-}) {
+  name,
+  onValueChange,
+  placeholder = "Select country",
+  value,
+}: CountryComboboxProps) {
   const initialCountry = useMemo(
-    () => getCountryOption(defaultValue),
-    [defaultValue]
+    () => getCountryOption(value ?? defaultValue),
+    [defaultValue, value]
   )
-  const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(
+  const [localCountry, setLocalCountry] = useState<CountryOption | null>(
     initialCountry
   )
+  const selectedCountry = localCountry
   const [inputValue, setInputValue] = useState(initialCountry?.name ?? "")
 
-  function handleInputValueChange(value: string) {
-    setInputValue(value)
+  function updateSelectedCountry(country: CountryOption | null) {
+    setLocalCountry(country)
+    onValueChange?.(country?.code ?? null)
+  }
 
-    if (!value.trim() || (selectedCountry && value !== selectedCountry.name)) {
-      setSelectedCountry(null)
+  function handleInputValueChange(nextValue: string) {
+    setInputValue(nextValue)
+
+    if (!nextValue.trim()) {
+      updateSelectedCountry(null)
+      return
     }
+
+    if (selectedCountry && nextValue !== selectedCountry.name) {
+      updateSelectedCountry(null)
+    }
+  }
+
+  function clearCountry() {
+    setInputValue("")
+    updateSelectedCountry(null)
   }
 
   return (
@@ -49,18 +75,22 @@ export function CountryCombobox({
       autoHighlight
       filter={countryMatches}
       inputValue={inputValue}
-      isItemEqualToValue={(itemValue, value) => itemValue.code === value.code}
+      isItemEqualToValue={(itemValue, selectedValue) =>
+        itemValue.code === selectedValue.code
+      }
       itemToStringLabel={(country) => country.name}
       itemToStringValue={(country) => country.code}
       items={countryOptions}
       onInputValueChange={handleInputValueChange}
       onValueChange={(country) => {
-        setSelectedCountry(country)
+        updateSelectedCountry(country)
         setInputValue(country?.name ?? "")
       }}
       value={selectedCountry}
     >
-      <input name={name} type="hidden" value={selectedCountry?.code ?? ""} />
+      {name ? (
+        <input name={name} type="hidden" value={selectedCountry?.code ?? ""} />
+      ) : null}
 
       <div className="relative">
         {selectedCountry ? (
@@ -71,24 +101,21 @@ export function CountryCombobox({
         ) : null}
 
         <Combobox.Input
-          aria-label="Country"
+          aria-label={ariaLabel}
           autoComplete="off"
           className={cn(
             inputClassName,
             selectedCountry ? "px-20 pl-11" : "px-20 pl-3"
           )}
-          placeholder="Select country"
+          placeholder={placeholder}
         />
 
         <div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
           {selectedCountry || inputValue ? (
             <Combobox.Clear
-              aria-label="Clear country"
+              aria-label={`Clear ${ariaLabel.toLowerCase()}`}
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
-              onClick={() => {
-                setSelectedCountry(null)
-                setInputValue("")
-              }}
+              onClick={clearCountry}
             >
               <HugeiconsIcon
                 icon={Cancel01Icon}
@@ -99,7 +126,7 @@ export function CountryCombobox({
           ) : null}
 
           <Combobox.Trigger
-            aria-label="Open country list"
+            aria-label={`Open ${ariaLabel.toLowerCase()} list`}
             className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
           >
             <HugeiconsIcon

@@ -1,12 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 import { EventCard, type EventFeedItem } from "@/components/events/event-card"
 import {
   useInfiniteQuery,
   type SupabaseQueryHandler,
 } from "@/hooks/use-infinite-query"
+import {
+  getEventFilters,
+  getFilterLabel,
+  hasEventFilters,
+  type EventFilterCategory,
+} from "@/lib/events/filters"
 
 const PAGE_SIZE = 6
 const EVENT_COLUMNS = `
@@ -53,9 +61,11 @@ function EventSkeleton() {
 }
 
 function FeedStatus({
+  action,
   title,
   description,
 }: {
+  action?: React.ReactNode
   title: string
   description: string
 }) {
@@ -65,20 +75,79 @@ function FeedStatus({
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
       </p>
+      {action ? <div className="mt-5">{action}</div> : null}
     </div>
   )
 }
 
-export function EventsInfiniteList() {
-  const loadMoreRef = useRef<HTMLDivElement>(null)
+function getSearchPattern(query: string) {
+  return query
+    .replace(/[\\%,().]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
-  const onlyPublishedEvents = useCallback<SupabaseQueryHandler>((query) => {
-    return query
-      .eq("status", "published")
-      .order("starts_at", { ascending: true })
-  }, [])
+export function EventsInfiniteList({
+  categories,
+}: {
+  categories: EventFilterCategory[]
+}) {
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
+  const filters = useMemo(
+    () =>
+      getEventFilters({
+        categories,
+        categorySlug: searchParams.get("category"),
+        countryCode: searchParams.get("country"),
+        query: searchParams.get("q"),
+      }),
+    [categories, searchParams]
+  )
+  const activeFilters = hasEventFilters(filters)
+  const filterLabel = getFilterLabel(filters)
+  const queryKey = [
+    "published-events",
+    filters.query,
+    filters.category?.id ?? "all-categories",
+    filters.countryCode ?? "all-countries",
+  ].join(":")
+
+  const onlyPublishedEvents = useCallback<SupabaseQueryHandler>(
+    (query) => {
+      let nextQuery = query
+        .eq("status", "published")
+        .order("starts_at", { ascending: true })
+
+      if (filters.category) {
+        nextQuery = nextQuery.eq("category_id", filters.category.id)
+      }
+
+      if (filters.countryCode) {
+        nextQuery = nextQuery.eq("country_code", filters.countryCode)
+      }
+
+      const searchPattern = getSearchPattern(filters.query)
+
+      if (searchPattern) {
+        const pattern = `%${searchPattern}%`
+        nextQuery = nextQuery.or(
+          [
+            `title.ilike.${pattern}`,
+            `description.ilike.${pattern}`,
+            `city.ilike.${pattern}`,
+            `location.ilike.${pattern}`,
+          ].join(",")
+        )
+      }
+
+      return nextQuery
+    },
+    [filters.category, filters.countryCode, filters.query]
+  )
 
   const {
+    count,
     data,
     error,
     fetchNextPage,
@@ -90,7 +159,7 @@ export function EventsInfiniteList() {
     tableName: "events",
     columns: EVENT_COLUMNS,
     pageSize: PAGE_SIZE,
-    queryKey: "published-events-by-start-date",
+    queryKey,
     trailingQuery: onlyPublishedEvents,
   })
 
@@ -129,10 +198,40 @@ export function EventsInfiniteList() {
 
   return (
     <div className="grid gap-5">
+      {isSuccess ? (
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-medium text-foreground">
+            {count} {count === 1 ? "event" : "events"}
+            {activeFilters ? " found" : " published"}
+          </p>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            {filterLabel}
+          </p>
+        </div>
+      ) : null}
+
       {isSuccess && data.length === 0 ? (
         <FeedStatus
-          title="No published events yet"
-          description="Published events will appear here as soon as they are available."
+          action={
+            activeFilters ? (
+              <Link
+                href="/#events"
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+              >
+                Clear filters
+              </Link>
+            ) : null
+          }
+          title={
+            activeFilters
+              ? "No events match these filters"
+              : "No published events yet"
+          }
+          description={
+            activeFilters
+              ? "Try a broader search, remove a filter, or check another country or category."
+              : "Published events will appear here as soon as they are available."
+          }
         />
       ) : null}
 

@@ -16,6 +16,7 @@ type SupabaseSelectQuery = {
   lt: (column: string, value: unknown) => SupabaseSelectQuery
   lte: (column: string, value: unknown) => SupabaseSelectQuery
   ilike: (column: string, pattern: string) => SupabaseSelectQuery
+  or: (filters: string) => SupabaseSelectQuery
   order: (
     column: string,
     options?: {
@@ -117,19 +118,28 @@ function createStore<TData>(props: UseInfiniteQueryProps) {
   }
 
   async function fetchPage(skip: number) {
-    if (state.hasInitialFetch && (state.isFetching || state.count <= state.data.length)) {
+    if (
+      state.hasInitialFetch &&
+      (state.isFetching || state.count <= state.data.length)
+    ) {
       return
     }
 
     setState({ isFetching: true })
 
-    let query = supabase.from(tableName).select(columns, { count: "exact" }) as unknown as SupabaseSelectQuery
+    let query = supabase
+      .from(tableName)
+      .select(columns, { count: "exact" }) as unknown as SupabaseSelectQuery
 
     if (trailingQuery) {
       query = trailingQuery(query)
     }
 
-    const { data: rows, count, error } = await query.range(skip, skip + pageSize - 1)
+    const {
+      data: rows,
+      count,
+      error,
+    } = await query.range(skip, skip + pageSize - 1)
 
     if (error) {
       setState({ error, isFetching: false })
@@ -171,15 +181,16 @@ function createStore<TData>(props: UseInfiniteQueryProps) {
 }
 
 export function useInfiniteQuery<TData>(props: UseInfiniteQueryProps) {
-  const {
-    columns,
-    pageSize,
-    queryKey,
-    tableName,
-    trailingQuery,
-  } = props
+  const { columns, pageSize, queryKey, tableName, trailingQuery } = props
   const store = useMemo(
-    () => createStore<TData>({ columns, pageSize, queryKey, tableName, trailingQuery }),
+    () =>
+      createStore<TData>({
+        columns,
+        pageSize,
+        queryKey,
+        tableName,
+        trailingQuery,
+      }),
     [columns, pageSize, queryKey, tableName, trailingQuery]
   )
 

@@ -90,6 +90,7 @@ function parseEventPayload(
   const endsAtValue = getText(formData, "ends_at")
   const ctaType = getCtaType(getText(formData, "cta_type"))
 
+  // console.log("missing_fields", !title || !slug || !categoryId || !city || !startsAtValue || !ctaType)
   if (!title || !slug || !categoryId || !city || !startsAtValue || !ctaType) {
     return { error: "missing_fields" }
   }
@@ -253,11 +254,11 @@ export async function updateEvent(
   const removedUrls = removedImageUrls.length
     ? removedImageUrls
     : [
-        currentEvent.cover_image_url !== coverImageUrl
-          ? currentEvent.cover_image_url
-          : null,
-        ...currentEvent.images.filter((image) => !galleryUrls.includes(image)),
-      ]
+      currentEvent.cover_image_url !== coverImageUrl
+        ? currentEvent.cover_image_url
+        : null,
+      ...currentEvent.images.filter((image) => !galleryUrls.includes(image)),
+    ]
   await removeImageUrls(removedUrls)
 
   revalidatePath("/")

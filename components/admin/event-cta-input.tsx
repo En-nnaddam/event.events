@@ -118,7 +118,7 @@ export const EventCtaInput = forwardRef<
         </select>
       </Field>
 
-      {ctaType !== "none" ? (
+      {ctaType !== "none" && (
         <>
           {ctaType === "external_link" ? (
             <>
@@ -165,11 +165,6 @@ export const EventCtaInput = forwardRef<
               <input type="hidden" name="cta_url" value="" />
             </>
           )}
-        </>
-      ) : (
-        <>
-          <input type="hidden" name="cta_url" value="" />
-          <input type="hidden" name="cta_phone" value="" />
         </>
       )}
     </div>
