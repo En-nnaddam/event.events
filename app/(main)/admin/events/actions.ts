@@ -11,15 +11,19 @@ import {
   isEventImageStoragePath,
   isUuid,
   slugify,
+  slugifyId,
   type EventCtaType,
   type EventStatus,
 } from "@/lib/admin/events"
 import { isCountryCode, normalizeCountryCode } from "@/lib/country-data"
 
-type EventPayload = {
+type EventPayload = EventPayloadDetails & {
+  slug: string
+}
+
+type EventPayloadDetails = {
   category_id: string
   title: string
-  slug: string
   description: string | null
   city: string
   country_code: string | null
@@ -78,11 +82,10 @@ function isHttpUrl(value: string) {
   }
 }
 
-function parseEventPayload(
+function parseEventPayloadDetails(
   formData: FormData
-): EventPayload | { error: string } {
+): EventPayloadDetails | { error: string } {
   const title = getText(formData, "title")
-  const slug = slugify(title)
   const categoryId = getText(formData, "category_id")
   const city = getText(formData, "city")
   const countryCodeValue = getText(formData, "country_code")
@@ -94,7 +97,7 @@ function parseEventPayload(
     return { error: "missing_fields" }
   }
 
-  if (!slug) {
+  if (!slugify(title)) {
     return { error: "generating_slug_failed" }
   }
 
@@ -150,7 +153,6 @@ function parseEventPayload(
   return {
     category_id: categoryId,
     title,
-    slug,
     description: getNullableText(formData, "description"),
     city,
     country_code: countryCode,
@@ -190,16 +192,23 @@ export async function createEvent(
   formData: FormData
 ): Promise<EventActionResult> {
   const { supabase, user } = await requireAdmin()
-  const payload = parseEventPayload(formData)
+  const payloadDetails = parseEventPayloadDetails(formData)
 
-  if ("error" in payload) {
-    return fail(payload.error)
+  if ("error" in payloadDetails) {
+    return fail(payloadDetails.error)
+  }
+
+  const slug = slugifyId(payloadDetails.title)
+
+  if (!slug) {
+    return fail("generating_slug_failed")
   }
 
   const { data, error } = await supabase
     .from("events")
     .insert({
-      ...payload,
+      ...payloadDetails,
+      slug,
       created_by: user.id,
       cover_image_url: null,
       images: [],
@@ -226,23 +235,42 @@ export async function updateEvent(
   }
 
   const { supabase } = await requireAdmin()
-  const payload = parseEventPayload(formData)
+  const payloadDetails = parseEventPayloadDetails(formData)
   const coverImageUrl = getNullableText(formData, "cover_image_url")
   const galleryUrls = getRepeatedText(formData, "images")
   const removedImageUrls = getRepeatedText(formData, "removed_image_urls")
 
-  if ("error" in payload) {
-    return fail(payload.error)
+  if ("error" in payloadDetails) {
+    return fail(payloadDetails.error)
   }
 
   const { data: currentEvent } = await supabase
     .from("events")
-    .select("cover_image_url,images")
+    .select("title,slug,cover_image_url,images")
     .eq("id", eventId)
-    .maybeSingle<{ cover_image_url: string | null; images: string[] }>()
+    .maybeSingle<{
+      title: string
+      slug: string
+      cover_image_url: string | null
+      images: string[]
+    }>()
 
   if (!currentEvent) {
     return fail("missing_event")
+  }
+
+  const slug =
+    payloadDetails.title === currentEvent.title
+      ? currentEvent.slug
+      : slugifyId(payloadDetails.title)
+
+  if (!slug) {
+    return fail("generating_slug_failed")
+  }
+
+  const payload: EventPayload = {
+    ...payloadDetails,
+    slug,
   }
 
   const { error } = await supabase

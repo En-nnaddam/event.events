@@ -62,6 +62,22 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
+export function slugifyId(value: string) {
+  const slug = slugify(value)
+
+  if (!slug) {
+    return ""
+  }
+
+  const randomBytes = new Uint8Array(6)
+  globalThis.crypto.getRandomValues(randomBytes)
+  const suffix = Array.from(randomBytes, (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("")
+
+  return `${slug}-${suffix}`
+}
+
 export function isUuid(value: string) {
   return uuidPattern.test(value)
 }
