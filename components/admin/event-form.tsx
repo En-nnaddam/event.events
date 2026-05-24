@@ -578,19 +578,21 @@ export function EventForm({
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="City" required>
-            <input
-              className={inputClassName}
-              name="city"
-              defaultValue={event?.city ?? ""}
-              required
-            />
-          </Field>
+        <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="City" required>
+              <input
+                className={inputClassName}
+                name="city"
+                defaultValue={event?.city ?? ""}
+                required
+              />
+            </Field>
 
-          <Field label="Country">
-            <CountryCombobox defaultValue={event?.country_code} />
-          </Field>
+            <Field label="Country">
+              <CountryCombobox defaultValue={event?.country_code} />
+            </Field>
+          </div>
 
           <Field label="Location">
             <input
@@ -600,28 +602,30 @@ export function EventForm({
             />
           </Field>
 
-          <Field label="Starts at" required>
-            <DatePicker
-              name="starts_at"
-              value={startsAt}
-              onChange={handleStartsAtChange}
-              required
-            />
-          </Field>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Starts at" required>
+              <DatePicker
+                name="starts_at"
+                value={startsAt}
+                onChange={handleStartsAtChange}
+                required
+              />
+            </Field>
 
-          <Field label="Ends at">
-            <DatePicker
-              key={endsAtPickerKey}
-              error={
-                hasInvalidEndDate
-                  ? "End date must be after the start date."
-                  : undefined
-              }
-              name="ends_at"
-              value={endsAt}
-              onChange={handleEndsAtChange}
-            />
-          </Field>
+            <Field label="Ends at">
+              <DatePicker
+                key={endsAtPickerKey}
+                error={
+                  hasInvalidEndDate
+                    ? "End date must be after the start date."
+                    : undefined
+                }
+                name="ends_at"
+                value={endsAt}
+                onChange={handleEndsAtChange}
+              />
+            </Field>
+          </div>
         </div>
       </section>
 
