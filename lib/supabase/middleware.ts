@@ -83,23 +83,26 @@ export async function updateSession(request: NextRequest) {
       return redirectWithCookies(request, supabaseResponse, '/auth')
     }
 
-    const destination =
-      profile.role === 'admin' ? '/admin' : profile.full_name?.trim() ? '/user' : '/profile/setup'
+    const hasCompletedProfile = Boolean(profile.full_name?.trim())
+    const postLoginDestination =
+      profile.role === 'admin' ? '/admin' : hasCompletedProfile ? '/' : '/profile/setup'
+    const protectedDestination =
+      profile.role === 'admin' ? '/admin' : hasCompletedProfile ? '/user' : '/profile/setup'
 
     if (isAuthRoute || isAdminLogin) {
-      return redirectWithCookies(request, supabaseResponse, destination)
+      return redirectWithCookies(request, supabaseResponse, postLoginDestination)
     }
 
     if (isAdminRoute && profile.role !== 'admin') {
-      return redirectWithCookies(request, supabaseResponse, destination)
+      return redirectWithCookies(request, supabaseResponse, protectedDestination)
     }
 
-    if (isProfileSetupRoute && destination !== '/profile/setup') {
-      return redirectWithCookies(request, supabaseResponse, destination)
+    if (isProfileSetupRoute && protectedDestination !== '/profile/setup') {
+      return redirectWithCookies(request, supabaseResponse, protectedDestination)
     }
 
-    if (isUserRoute && destination !== '/user') {
-      return redirectWithCookies(request, supabaseResponse, destination)
+    if (isUserRoute && protectedDestination !== '/user') {
+      return redirectWithCookies(request, supabaseResponse, protectedDestination)
     }
   }
 

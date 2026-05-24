@@ -35,5 +35,5 @@ export async function getSignedInDestination(supabase: SupabaseClient) {
     return "/profile/setup"
   }
 
-  return "/user"
+  return "/"
 }

@@ -42,6 +42,6 @@ export async function getCurrentAuth(supabase: SupabaseClient): Promise<CurrentA
     role: profile.role,
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
-    destination: profile.role === "admin" ? "/admin" : "/",
+    destination: profile.role === "admin" ? "/admin" : "/user",
   }
 }
