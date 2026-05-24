@@ -11,7 +11,7 @@ export async function AppHeader() {
   const currentAuth = await getCurrentAuth(supabase)
 
   return (
-    <header className="border-b border-border bg-background/95">
+    <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex min-h-16 max-w-6xl gap-3 px-5 py-3 sm:flex-row items-center justify-between sm:px-6 lg:px-8">
         <Link href="/" className="text-base font-semibold tracking-normal text-foreground">
           Event.Events

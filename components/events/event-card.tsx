@@ -99,7 +99,7 @@ function EventImage({
     return (
       <div
         className={cn(
-          "flex min-h-56 items-center justify-center rounded-lg border border-border bg-muted text-sm font-medium text-muted-foreground",
+          "flex min-h-56 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
           className
         )}
       >
@@ -113,7 +113,7 @@ function EventImage({
       type="button"
       onClick={onOpen}
       className={cn(
-        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-muted text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
       aria-label={`Open ${title}`}
@@ -341,7 +341,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   }
 
   return (
-    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm md:grid-cols-[minmax(220px,0.42fr)_1fr] md:p-5">
+    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card p-4 shadow-lg shadow-black/15 md:grid-cols-[minmax(220px,0.42fr)_1fr] md:p-5">
       <div className="grid min-w-0 gap-3">
         <EventImage
           alt={`${event.title} cover image`}
@@ -376,11 +376,13 @@ export function EventCard({ event }: { event: EventFeedItem }) {
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-normal text-muted-foreground uppercase">
           {event.categories?.name ? (
-            <span className="rounded-md bg-secondary px-2 py-1 text-secondary-foreground">
+            <span className="rounded-md border border-accent-warm/20 bg-accent px-2 py-1 text-accent-foreground">
               {event.categories.name}
             </span>
           ) : null}
-          <span className="rounded-md bg-muted px-2 py-1">{event.city}</span>
+          <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
+            {event.city}
+          </span>
         </div>
 
         <div>
@@ -395,14 +397,14 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         </div>
 
         <dl className="grid gap-3 text-sm md:grid-cols-2">
-          <div className="rounded-md border border-border bg-background p-3">
+          <div className="rounded-md border border-border/70 bg-surface-raised p-3">
             <dt className="font-medium text-foreground">Date</dt>
             <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
               {formatDateRange(event)}
             </dd>
           </div>
 
-          <div className="rounded-md border border-border bg-background p-3">
+          <div className="rounded-md border border-border/70 bg-surface-raised p-3">
             <dt className="font-medium text-foreground">Place</dt>
             <dd className="mt-1 leading-5 [overflow-wrap:anywhere] break-words text-muted-foreground">
               {event.location ? `${event.location}, ${event.city}` : event.city}
@@ -426,7 +428,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                   ? "noreferrer"
                   : undefined
               }
-              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
             >
               {cta.label}
             </a>
