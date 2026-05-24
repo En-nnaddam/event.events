@@ -7,6 +7,7 @@ type AuthAvatarProps = {
   avatarUrl: string | null
   fullName: string | null
   isAdmin?: boolean
+  size?: "sm" | "md" | "lg"
 }
 
 function getInitials(name: string | null) {
@@ -25,13 +26,31 @@ function getInitials(name: string | null) {
     .join("")
 }
 
-export function AuthAvatar({ avatarUrl, fullName, isAdmin = false }: AuthAvatarProps) {
+const avatarSizes = {
+  sm: "size-8 text-xs",
+  md: "size-10 text-sm",
+  lg: "size-12 text-base",
+}
+
+const iconSizes = {
+  sm: "size-4",
+  md: "size-5",
+  lg: "size-6",
+}
+
+export function AuthAvatar({
+  avatarUrl,
+  fullName,
+  isAdmin = false,
+  size = "sm",
+}: AuthAvatarProps) {
   const initials = getInitials(fullName)
 
   return (
     <span
       className={cn(
-        "grid size-8 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-xs font-semibold text-muted-foreground",
+        "grid shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted font-semibold text-muted-foreground",
+        avatarSizes[size],
         isAdmin && "border-primary/35 bg-primary text-primary-foreground"
       )}
       aria-hidden="true"
@@ -47,7 +66,7 @@ export function AuthAvatar({ avatarUrl, fullName, isAdmin = false }: AuthAvatarP
       ) : initials ? (
         initials
       ) : (
-        <HugeiconsIcon icon={UserIcon} strokeWidth={2} className="size-4" />
+        <HugeiconsIcon icon={UserIcon} strokeWidth={2} className={iconSizes[size]} />
       )}
     </span>
   )
