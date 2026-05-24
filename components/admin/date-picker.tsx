@@ -26,6 +26,7 @@ type TimeParts = {
 
 const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"))
 const minuteOptions = ["00", "15", "30", "45"]
+const defaultTimeValue = "08:00"
 
 function getTriggerClassName(hasError: boolean) {
   return cn(
@@ -65,7 +66,7 @@ function splitDateTime(value: string) {
 
   return {
     date: selectedDate,
-    time: hour && minute ? `${hour}:${minute}` : "00:00",
+    time: hour && minute ? `${hour}:${minute}` : defaultTimeValue,
   }
 }
 
@@ -139,7 +140,7 @@ export function DatePicker({
   }
 
   function updateTimePart(part: keyof TimeParts, nextValue: string) {
-    const time = parseTime(timeValue) ?? { hour: "00", minute: "00" }
+    const time = parseTime(timeValue) ?? parseTime(defaultTimeValue) ?? { hour: "08", minute: "00" }
     const nextTimeValue = part === "hour" ? `${nextValue}:${time.minute}` : `${time.hour}:${nextValue}`
 
     updateTime(nextTimeValue)
