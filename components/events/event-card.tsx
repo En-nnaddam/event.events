@@ -430,7 +430,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           src={event.cover_image_url}
           title={`${event.title} cover image`}
           sizes="(max-width: 1024px) calc(100vw - 2rem), 42vw"
-          className="aspect-[4/3] min-h-72 max-h-[34rem] md:min-h-80 lg:min-h-96 lg:max-h-[38rem]"
+          className="aspect-4/3 min-h-72 max-h-136 md:min-h-80 lg:min-h-96 lg:max-h-152"
           dynamicAspect
           imageClassName="object-contain"
           onOpen={
