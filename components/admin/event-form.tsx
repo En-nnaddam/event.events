@@ -67,6 +67,7 @@ const errorMessages: Record<string, string> = {
   missing_cta_phone: "Phone and WhatsApp CTAs require a phone number.",
   missing_cta_url: "External link CTAs require a URL.",
   missing_event: "The selected event could not be found.",
+  generating_slug_failed: "Could not generate a valid slug for the event. Please try again.",
   missing_fields: "Fill in the required event fields.",
   save_failed: "The event could not be saved.",
   upload_failed: "One or more images could not be uploaded.",
@@ -174,11 +175,11 @@ export function EventForm({
     () =>
       event?.cover_image_url
         ? [
-            {
-              url: event.cover_image_url,
-              label: "Current cover image",
-            },
-          ]
+          {
+            url: event.cover_image_url,
+            label: "Current cover image",
+          },
+        ]
         : [],
     [event]
   )
@@ -374,11 +375,11 @@ export function EventForm({
       ]
       const removedImageUrls = event
         ? [
-            ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl
-              ? [event.cover_image_url]
-              : []),
-            ...event.images.filter((image) => !keptGalleryUrls.includes(image)),
-          ]
+          ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl
+            ? [event.cover_image_url]
+            : []),
+          ...event.images.filter((image) => !keptGalleryUrls.includes(image)),
+        ]
         : []
 
       if (finalCoverUrl) {
@@ -708,9 +709,8 @@ export function EventForm({
         />
         <a
           href="/admin/events"
-          className={`inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none ${
-            processing ? "pointer-events-none opacity-50" : ""
-          }`}
+          className={`inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none ${processing ? "pointer-events-none opacity-50" : ""
+            }`}
         >
           Cancel
         </a>

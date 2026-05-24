@@ -90,9 +90,12 @@ function parseEventPayload(
   const endsAtValue = getText(formData, "ends_at")
   const ctaType = getCtaType(getText(formData, "cta_type"))
 
-  // console.log("missing_fields", !title || !slug || !categoryId || !city || !startsAtValue || !ctaType)
-  if (!title || !slug || !categoryId || !city || !startsAtValue || !ctaType) {
+  if (!title || !categoryId || !city || !startsAtValue || !ctaType) {
     return { error: "missing_fields" }
+  }
+
+  if (!slug) {
+    return { error: "generating_slug_failed" }
   }
 
   if (!isUuid(categoryId)) {
