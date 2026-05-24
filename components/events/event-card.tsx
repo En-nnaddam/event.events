@@ -6,6 +6,7 @@ import {
   Calendar01Icon,
   Cancel01Icon,
   Clock01Icon,
+  Image01Icon,
   Location01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -46,6 +47,12 @@ const detailTimeFormatter = new Intl.DateTimeFormat("en", {
   hour: "numeric",
   minute: "2-digit",
 })
+
+const rtlTextPattern = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/
+
+function hasRtlText(value: string | null | undefined) {
+  return Boolean(value && rtlTextPattern.test(value))
+}
 
 function formatEventDateTime(value: string) {
   const date = new Date(value)
@@ -385,6 +392,9 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   const galleryImages = event.images.filter(
     (image) => image && image !== event.cover_image_url
   )
+  const hasImages = Boolean(event.cover_image_url || galleryImages.length > 0)
+  const imageCount = (event.cover_image_url ? 1 : 0) + galleryImages.length
+  const hasRtlContent = hasRtlText(event.title) || hasRtlText(event.description)
   const imageItems = useMemo<EventImageItem[]>(() => {
     const coverImage = event.cover_image_url
       ? [
@@ -458,74 +468,80 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         ) : null}
       </div>
 
-      <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-normal text-muted-foreground uppercase">
-          {event.categories?.name ? (
-            <span className="rounded-md border border-accent-warm/20 bg-accent px-2 py-1 text-accent-foreground">
-              {event.categories.name}
-            </span>
-          ) : null}
-          <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <CountryFlag
-                code={event.country_code}
-                className="h-3.5 w-5 rounded-[2px] shadow-sm ring-1 ring-border/70"
-              />
-              <span>
-                {country ? `${event.city}, ${country.name}` : event.city}
+      <div className="flex min-w-0 flex-col gap-5 lg:min-h-full lg:justify-between">
+        <div className="grid min-w-0 gap-4">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-normal text-muted-foreground uppercase">
+            {event.categories?.name ? (
+              <span className="rounded-md border border-accent-warm/20 bg-accent px-2 py-1 text-accent-foreground">
+                {event.categories.name}
+              </span>
+            ) : null}
+            <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <CountryFlag
+                  code={event.country_code}
+                  className="h-3.5 w-5 rounded-[2px] shadow-sm ring-1 ring-border/70"
+                />
+                <span>
+                  {country ? `${event.city}, ${country.name}` : event.city}
+                </span>
               </span>
             </span>
-          </span>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-semibold tracking-normal text-foreground">
-            {event.title}
-          </h2>
-          {event.description ? (
-            <p className="mt-3 text-sm leading-6 whitespace-pre-line text-muted-foreground">
-              {event.description}
-            </p>
-          ) : null}
-        </div>
-
-        <dl className="grid gap-3 text-sm md:grid-cols-2">
-          <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
-            <DetailIcon icon={Calendar01Icon} />
-            <div className="grid min-w-0 gap-3">
-              <DateLine label="Starts" value={event.starts_at} />
-              {event.ends_at ? (
-                <DateLine label="Ends" value={event.ends_at} />
-              ) : null}
-            </div>
           </div>
 
-          <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
-            <DetailIcon icon={Location01Icon} />
-            <div className="min-w-0">
-              <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
-                Place
-              </dt>
-              <dd className="mt-1 grid gap-1 leading-5 wrap-anywhere">
-                {event.location ? (
-                  <span className="font-medium text-foreground">
-                    {event.location}
-                  </span>
+          <div
+            dir={hasRtlContent ? "rtl" : "ltr"}
+            className={cn("min-w-0", hasRtlContent && "text-right")}
+          >
+            <h2 className="text-2xl leading-tight font-semibold tracking-normal text-foreground">
+              {event.title}
+            </h2>
+            {event.description ? (
+              <p className="mt-3 max-w-3xl text-sm leading-6 whitespace-pre-line text-muted-foreground">
+                {event.description}
+              </p>
+            ) : null}
+          </div>
+
+          <dl className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+              <DetailIcon icon={Calendar01Icon} />
+              <div className="grid min-w-0 gap-3">
+                <DateLine label="Starts at" value={event.starts_at} />
+                {event.ends_at ? (
+                  <DateLine label="Ends at" value={event.ends_at} />
                 ) : null}
-                <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-muted-foreground">
-                  <CountryFlag
-                    code={event.country_code}
-                    className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
-                  />
-                  <span>{eventLocation || event.city}</span>
-                </span>
-              </dd>
+              </div>
             </div>
-          </div>
-        </dl>
 
-        {cta ? (
-          <div>
+            <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+              <DetailIcon icon={Location01Icon} />
+              <div className="min-w-0">
+                <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
+                  Location
+                </dt>
+                <dd className="mt-1 grid gap-1 leading-5 wrap-anywhere">
+                  {event.location ? (
+                    <span className="font-medium text-foreground">
+                      {event.location}
+                    </span>
+                  ) : null}
+                  <span className="inline-flex min-w-0 flex-wrap items-center gap-1.5 text-muted-foreground">
+                    <CountryFlag
+                      code={event.country_code}
+                      className="h-4 w-6 shrink-0 rounded-[2px] shadow-sm ring-1 ring-border/70"
+                    />
+                    <span>{eventLocation || event.city}</span>
+                  </span>
+                </dd>
+              </div>
+            </div>
+          </dl>
+        </div>
+
+        {cta || hasImages ? (
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {cta ? (
             <a
               href={cta.href}
               target={
@@ -544,6 +560,21 @@ export function EventCard({ event }: { event: EventFeedItem }) {
             >
               {cta.label}
             </a>
+            ) : null}
+
+            {hasImages ? (
+              <button
+                type="button"
+                onClick={() => setActiveImageIndex(0)}
+                className="inline-flex min-h-10 max-w-full items-center justify-center gap-2 rounded-md border border-border/80 bg-surface-raised px-4 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+              >
+                <HugeiconsIcon icon={Image01Icon} strokeWidth={2} className="size-4" />
+                <span>View images</span>
+                <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                  {imageCount}
+                </span>
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
