@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { AuthMenu } from "@/components/auth/auth-menu"
 import { LogoutForm } from "@/components/auth/logout-form"
+import { Logo } from "@/components/layout/logo"
 import { buttonVariants } from "@/components/ui/button"
 import { getCurrentAuth } from "@/lib/auth/current"
 import { createClient } from "@/lib/supabase/server"
@@ -15,9 +16,9 @@ export async function Header() {
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:flex-row sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="text-base font-semibold tracking-normal text-foreground"
+          className="rounded-md focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
         >
-          Event.Events
+          <Logo />
         </Link>
 
         <nav className="flex flex-wrap items-center gap-2">
