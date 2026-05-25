@@ -44,8 +44,9 @@ const detailDateFormatter = new Intl.DateTimeFormat("en", {
 })
 
 const detailTimeFormatter = new Intl.DateTimeFormat("en", {
-  hour: "numeric",
+  hour: "2-digit",
   minute: "2-digit",
+  hour12: false,
 })
 
 const rtlTextPattern = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/
