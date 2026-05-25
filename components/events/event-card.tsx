@@ -382,8 +382,8 @@ function ImageModal({
         }
       }}
     >
-      <div className="grid max-h-full w-full max-w-6xl gap-3">
-        <div className="flex items-center justify-between gap-3 text-white">
+      <div className="grid max-h-full min-w-0 w-full max-w-6xl gap-3">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-white">
           <p className="min-w-0 truncate text-sm font-medium">
             {activeImage.title}
             {hasMultipleImages
