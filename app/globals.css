@@ -142,3 +142,221 @@
     @apply font-sans;
     }
 }
+
+@layer components {
+  .event-hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(
+        color-mix(in oklch, var(--foreground) 7%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in oklch, var(--foreground) 7%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 4.5rem 4.5rem;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+    opacity: 0.26;
+  }
+
+  .event-hero-sweep {
+    position: absolute;
+    pointer-events: none;
+    height: 18rem;
+    width: 46rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--primary) 24%, transparent),
+      color-mix(in oklch, var(--accent-warm) 18%, transparent),
+      transparent
+    );
+    filter: blur(34px);
+    opacity: 0.56;
+    transform: rotate(-12deg);
+  }
+
+  .event-hero-sweep-one {
+    right: -16rem;
+    top: 4rem;
+  }
+
+  .event-hero-sweep-two {
+    bottom: -8rem;
+    left: -18rem;
+    opacity: 0.38;
+  }
+
+  .event-hero-pulse::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--primary) 55%, transparent),
+      color-mix(in oklch, var(--accent-warm) 45%, transparent),
+      transparent
+    );
+  }
+
+  .event-hero-live-dot {
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 34%, transparent);
+    animation: event-hero-live 1.8s ease-out infinite;
+  }
+
+  .event-hero-gradient-text {
+    background: linear-gradient(
+      115deg,
+      var(--primary),
+      var(--accent-warm) 56%,
+      var(--chart-3)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .event-hero-preview {
+    box-shadow:
+      0 1.5rem 4rem color-mix(in oklch, var(--primary) 18%, transparent),
+      inset 0 1px 0 color-mix(in oklch, var(--foreground) 10%, transparent);
+  }
+
+  .event-hero-preview::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--primary) 14%, transparent),
+        transparent 42%
+      ),
+      linear-gradient(
+        0deg,
+        color-mix(in oklch, var(--accent-warm) 9%, transparent),
+        transparent 48%
+      );
+  }
+
+  .event-hero-preview > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .event-hero-preview-media {
+    min-height: 13.5rem;
+    box-shadow: inset 0 -4rem 5rem rgb(0 0 0 / 0.24);
+  }
+
+  .event-hero-stage-lines {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        circle at 26% 24%,
+        rgb(255 255 255 / 0.28),
+        transparent 20%
+      ),
+      radial-gradient(
+        circle at 72% 18%,
+        rgb(255 255 255 / 0.2),
+        transparent 18%
+      ),
+      repeating-linear-gradient(
+        105deg,
+        rgb(255 255 255 / 0.18) 0 1px,
+        transparent 1px 1.1rem
+      );
+    opacity: 0.72;
+  }
+
+  .event-hero-float {
+    animation: event-hero-float 5.5s ease-in-out infinite;
+  }
+
+  .event-hero-chip {
+    position: absolute;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    border: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--card) 76%, transparent);
+    padding: 0.45rem 0.75rem;
+    color: var(--foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    box-shadow: 0 0.75rem 2rem
+      color-mix(in oklch, var(--primary) 14%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .event-hero-chip::before {
+    content: "";
+    margin-right: 0.45rem;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--accent-warm);
+  }
+
+  .event-hero-chip-music {
+    left: -1.25rem;
+    top: -0.9rem;
+  }
+
+  .event-hero-chip-workshop {
+    right: -1.1rem;
+    top: 4.9rem;
+    animation-delay: -1.3s;
+  }
+
+  .event-hero-chip-nightlife {
+    bottom: 9.2rem;
+    left: -2.4rem;
+    animation-delay: -2.1s;
+  }
+
+  .event-hero-chip-culture {
+    right: -1.5rem;
+    bottom: 3.7rem;
+    animation-delay: -3s;
+  }
+}
+
+@media (min-width: 768px) {
+  .event-hero-chip {
+    display: inline-flex;
+  }
+}
+
+@keyframes event-hero-live {
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.55rem
+      color-mix(in oklch, var(--primary) 0%, transparent);
+  }
+}
+
+@keyframes event-hero-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -0.45rem, 0);
+  }
+}
