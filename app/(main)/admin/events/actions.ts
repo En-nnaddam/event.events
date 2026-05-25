@@ -1,23 +1,28 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { requireAdmin } from "@/lib/admin/auth"
 import {
   EVENT_IMAGE_BUCKET,
   formatDateTimeLocal,
+  getCtaType,
   getEventCtaLabel,
+  getStatus,
   getStoragePathFromPublicUrl,
   isEventImageStoragePath,
   isUuid,
   slugify,
   slugifyId,
   type EventCtaType,
-  type EventStatus,
 } from "@/lib/admin/events"
+import { revalidateEventConsumers } from "@/lib/admin/revalidation"
 import { isCountryCode, normalizeCountryCode } from "@/lib/country-data"
-
+import {
+  getNullableText,
+  getRepeatedText,
+  getText,
+} from "@/lib/forms/form-data"
 type EventPayload = EventPayloadDetails & {
   slug: string
 }
@@ -41,29 +46,6 @@ type EventActionResult = {
   eventId?: string
   error?: string
   ok: boolean
-}
-
-function getText(formData: FormData, key: string) {
-  const value = formData.get(key)
-  return typeof value === "string" ? value.trim() : ""
-}
-
-function getNullableText(formData: FormData, key: string) {
-  const value = getText(formData, key)
-  return value.length > 0 ? value : null
-}
-
-function getStatus(value: string): EventStatus | null {
-  return value === "published" || value === "archived" ? value : null
-}
-
-function getCtaType(value: string): EventCtaType | null {
-  return value === "external_link" ||
-    value === "whatsapp" ||
-    value === "phone" ||
-    value === "none"
-    ? value
-    : null
 }
 
 function fail(error: string): EventActionResult {
@@ -113,7 +95,9 @@ function isNewPastDate(nextValue: string | null, currentValue: string | null) {
     return false
   }
 
-  return !isUnchangedDateTime(nextValue, currentValue) && isBeforeToday(nextValue)
+  return (
+    !isUnchangedDateTime(nextValue, currentValue) && isBeforeToday(nextValue)
+  )
 }
 
 function parseEventPayloadDetails(
@@ -214,14 +198,6 @@ async function removeImageUrls(urls: Array<string | null | undefined>) {
   await supabase.storage.from(EVENT_IMAGE_BUCKET).remove(paths)
 }
 
-function getRepeatedText(formData: FormData, key: string) {
-  return formData
-    .getAll(key)
-    .filter(
-      (value): value is string => typeof value === "string" && value.length > 0
-    )
-}
-
 export async function createEvent(
   formData: FormData
 ): Promise<EventActionResult> {
@@ -258,9 +234,7 @@ export async function createEvent(
     return fail("save_failed")
   }
 
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
+  revalidateEventConsumers()
   return { ok: true, eventId: data.id }
 }
 
@@ -332,17 +306,14 @@ export async function updateEvent(
   const removedUrls = removedImageUrls.length
     ? removedImageUrls
     : [
-      currentEvent.cover_image_url !== coverImageUrl
-        ? currentEvent.cover_image_url
-        : null,
-      ...currentEvent.images.filter((image) => !galleryUrls.includes(image)),
-    ]
+        currentEvent.cover_image_url !== coverImageUrl
+          ? currentEvent.cover_image_url
+          : null,
+        ...currentEvent.images.filter((image) => !galleryUrls.includes(image)),
+      ]
   await removeImageUrls(removedUrls)
 
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
-  revalidatePath(`/admin/events/${eventId}/edit`)
+  revalidateEventConsumers(eventId)
   return { ok: true }
 }
 
@@ -377,10 +348,7 @@ export async function updateEventImages(
     return fail("save_failed")
   }
 
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
-  revalidatePath(`/admin/events/${eventId}/edit`)
+  revalidateEventConsumers(eventId)
   return { ok: true, eventId }
 }
 
@@ -402,9 +370,7 @@ export async function updateEventStatus(formData: FormData) {
     redirect("/admin/events?error=status_failed")
   }
 
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
+  revalidateEventConsumers()
   redirect("/admin/events")
 }
 
@@ -432,9 +398,7 @@ export async function deleteEvent(formData: FormData) {
     await removeImageUrls([event.cover_image_url, ...event.images])
   }
 
-  revalidatePath("/")
-  revalidatePath("/admin")
-  revalidatePath("/admin/events")
+  revalidateEventConsumers()
   redirect("/admin/events")
 }
 

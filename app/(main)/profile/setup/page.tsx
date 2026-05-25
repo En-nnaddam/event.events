@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation"
 
+import {
+  CenteredPageShell,
+  ErrorNotice,
+  Panel,
+} from "@/components/layout/page-shell"
 import { Button } from "@/components/ui/button"
+import { Field, fieldControlClassName } from "@/components/ui/form-field"
 import { createClient } from "@/lib/supabase/server"
 
 import { completeProfile } from "./actions"
@@ -16,7 +22,9 @@ const errorMessages: Record<string, string> = {
   save_failed: "Could not save your profile. Please try again.",
 }
 
-export default async function ProfileSetupPage({ searchParams }: ProfileSetupPageProps) {
+export default async function ProfileSetupPage({
+  searchParams,
+}: ProfileSetupPageProps) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -54,37 +62,36 @@ export default async function ProfileSetupPage({ searchParams }: ProfileSetupPag
         : ""
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background p-6">
-        <div className="grid w-full max-w-md gap-4">
-        {error ? (
-          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {error}
-          </div>
-        ) : null}
+    <CenteredPageShell>
+      <div className="grid w-full max-w-md gap-4">
+        <ErrorNotice message={error} />
 
-        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <Panel className="p-5">
           <div className="mb-5">
-            <h1 className="text-2xl font-semibold tracking-normal">Complete your profile</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Add your name before continuing.</p>
+            <h1 className="text-2xl font-semibold tracking-normal">
+              Complete your profile
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add your name before continuing.
+            </p>
           </div>
 
           <form action={completeProfile} className="grid gap-4">
-            <label className="grid gap-2 text-sm font-medium">
-              Full name
+            <Field label="Full name">
               <input
-                className="h-10 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/30"
+                className={fieldControlClassName}
                 name="full_name"
                 autoComplete="name"
                 defaultValue={suggestedName}
                 required
               />
-            </label>
+            </Field>
             <Button size="lg" type="submit">
               Continue
             </Button>
           </form>
-        </div>
-        </div>
-    </main>
+        </Panel>
+      </div>
+    </CenteredPageShell>
   )
 }

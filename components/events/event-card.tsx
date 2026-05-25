@@ -11,120 +11,24 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react"
 
-import { getEventCtaLabel, type EventCtaType } from "@/lib/admin/events"
 import { CountryFlag, getCountryOption } from "@/lib/countries"
+import {
+  formatEventDateTime,
+  getEventCta,
+  getEventDateStatus,
+  hasRtlText,
+  type EventDateStatus,
+} from "@/lib/events/presentation"
+import type { EventFeedItem } from "@/lib/events/types"
 import { cn } from "@/lib/utils"
-
-export type EventFeedItem = {
-  id: string
-  title: string
-  description: string | null
-  city: string
-  country_code: string | null
-  location: string | null
-  starts_at: string
-  ends_at: string | null
-  cover_image_url: string | null
-  images: string[]
-  cta_type: EventCtaType
-  cta_url: string | null
-  cta_phone: string | null
-  categories: {
-    name: string
-  } | null
-}
-
-const detailDateFormatter = new Intl.DateTimeFormat("en", {
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-})
-
-const detailTimeFormatter = new Intl.DateTimeFormat("en", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-})
-
-const rtlTextPattern = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/
-
-type EventDateStatus = "ended" | "today" | "upcoming"
-
-function hasRtlText(value: string | null | undefined) {
-  return Boolean(value && rtlTextPattern.test(value))
-}
-
-function getLocalDayStart(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function isSameLocalDay(firstDate: Date, secondDate: Date) {
-  return getLocalDayStart(firstDate).getTime() === getLocalDayStart(secondDate).getTime()
-}
-
-function isLocalDayBetween(date: Date, startsAt: Date, endsAt: Date) {
-  const dayStart = getLocalDayStart(date).getTime()
-
-  return (
-    dayStart >= getLocalDayStart(startsAt).getTime() &&
-    dayStart <= getLocalDayStart(endsAt).getTime()
-  )
-}
-
-function getEventDateStatus(event: EventFeedItem, now = new Date()): EventDateStatus {
-  const startsAt = new Date(event.starts_at)
-  const endsAt = event.ends_at ? new Date(event.ends_at) : null
-  const eventEnd = endsAt ?? startsAt
-
-  if (now > eventEnd) {
-    return "ended"
-  }
-
-  if (endsAt ? isLocalDayBetween(now, startsAt, endsAt) : isSameLocalDay(now, startsAt)) {
-    return "today"
-  }
-
-  return "upcoming"
-}
-
-function formatEventDateTime(value: string) {
-  const date = new Date(value)
-
-  return {
-    date: detailDateFormatter.format(date),
-    time: detailTimeFormatter.format(date),
-  }
-}
-
-function getCta(event: EventFeedItem) {
-  if (event.cta_type === "external_link" && event.cta_url) {
-    return {
-      href: event.cta_url,
-      label: getEventCtaLabel(event.cta_type),
-    }
-  }
-
-  if (event.cta_type === "whatsapp" && event.cta_phone) {
-    const phone = event.cta_phone.replace(/[^\d]/g, "")
-
-    return {
-      href: `https://wa.me/${phone}`,
-      label: getEventCtaLabel(event.cta_type),
-    }
-  }
-
-  if (event.cta_type === "phone" && event.cta_phone) {
-    return {
-      href: `tel:${event.cta_phone}`,
-      label: getEventCtaLabel(event.cta_type),
-    }
-  }
-
-  return null
-}
 
 type EventImageItem = {
   alt: string
@@ -157,7 +61,9 @@ function EventImage({
   } | null>(null)
   const aspectRatio = imageAspect?.src === src ? imageAspect.ratio : null
   const imageStyle: CSSProperties | undefined =
-    dynamicAspect && aspectRatio ? { aspectRatio: String(aspectRatio) } : undefined
+    dynamicAspect && aspectRatio
+      ? { aspectRatio: String(aspectRatio) }
+      : undefined
 
   if (!src) {
     return (
@@ -221,11 +127,7 @@ function EventImage({
   )
 }
 
-function DetailIcon({
-  icon,
-}: {
-  icon: typeof Calendar01Icon
-}) {
+function DetailIcon({ icon }: { icon: typeof Calendar01Icon }) {
   return (
     <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/70 text-primary dark:text-accent-warm">
       <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
@@ -244,7 +146,11 @@ function DateLine({ label, value }: { label: string; value: string }) {
       <dd className="leading-5 wrap-anywhere">
         <span className="font-medium text-foreground">{dateTime.date}</span>
         <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
-          <HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-3.5" />
+          <HugeiconsIcon
+            icon={Clock01Icon}
+            strokeWidth={2}
+            className="size-3.5"
+          />
           {dateTime.time}
         </span>
       </dd>
@@ -283,7 +189,10 @@ function EventStatusChip({ status }: { status: EventDateStatus }) {
         config.className
       )}
     >
-      <span className="size-1.5 rounded-full bg-current opacity-70" aria-hidden="true" />
+      <span
+        className="size-1.5 rounded-full bg-current opacity-70"
+        aria-hidden="true"
+      />
       {config.label}
     </span>
   )
@@ -348,10 +257,10 @@ function ImageModal({
 
     const preloadIndexes = hasMultipleImages
       ? [
-        activeIndex,
-        (activeIndex - 1 + images.length) % images.length,
-        (activeIndex + 1) % images.length,
-      ]
+          activeIndex,
+          (activeIndex - 1 + images.length) % images.length,
+          (activeIndex + 1) % images.length,
+        ]
       : [activeIndex]
 
     preloadIndexes.forEach((index) => {
@@ -382,7 +291,7 @@ function ImageModal({
         }
       }}
     >
-      <div className="grid max-h-full min-w-0 w-full max-w-6xl gap-3">
+      <div className="grid max-h-full w-full max-w-6xl min-w-0 gap-3">
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-white">
           <p className="min-w-0 truncate text-sm font-medium">
             {activeImage.title}
@@ -396,7 +305,11 @@ function ImageModal({
             className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-white/10 text-sm font-medium transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
             aria-label="Close image preview"
           >
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              strokeWidth={2}
+              className="size-4"
+            />
           </button>
         </div>
 
@@ -444,7 +357,11 @@ function ImageModal({
                 className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none sm:inline-flex"
                 aria-label="Show previous image"
               >
-                <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
+                <HugeiconsIcon
+                  icon={ArrowLeft01Icon}
+                  strokeWidth={2}
+                  className="size-5"
+                />
               </button>
               <button
                 type="button"
@@ -452,7 +369,11 @@ function ImageModal({
                 className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none sm:inline-flex"
                 aria-label="Show next image"
               >
-                <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-5" />
+                <HugeiconsIcon
+                  icon={ArrowRight01Icon}
+                  strokeWidth={2}
+                  className="size-5"
+                />
               </button>
             </>
           ) : null}
@@ -466,7 +387,11 @@ function ImageModal({
               className="inline-flex size-10 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
               aria-label="Show previous image"
             >
-              <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
+              <HugeiconsIcon
+                icon={ArrowLeft01Icon}
+                strokeWidth={2}
+                className="size-5"
+              />
             </button>
             <p className="text-center text-xs font-semibold text-white/80">
               {activeIndex + 1} / {images.length}
@@ -477,7 +402,11 @@ function ImageModal({
               className="inline-flex size-10 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
               aria-label="Show next image"
             >
-              <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-5" />
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                strokeWidth={2}
+                className="size-5"
+              />
             </button>
           </div>
         ) : null}
@@ -487,7 +416,7 @@ function ImageModal({
 }
 
 export function EventCard({ event }: { event: EventFeedItem }) {
-  const cta = getCta(event)
+  const cta = getEventCta(event)
   const country = getCountryOption(event.country_code)
   const eventLocation = [event.city, country?.name].filter(Boolean).join(", ")
   const galleryImages = event.images.filter(
@@ -500,12 +429,12 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   const imageItems = useMemo<EventImageItem[]>(() => {
     const coverImage = event.cover_image_url
       ? [
-        {
-          alt: `${event.title} cover image`,
-          src: event.cover_image_url,
-          title: `${event.title} cover image`,
-        },
-      ]
+          {
+            alt: `${event.title} cover image`,
+            src: event.cover_image_url,
+            title: `${event.title} cover image`,
+          },
+        ]
       : []
 
     return [
@@ -542,7 +471,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           src={event.cover_image_url}
           title={`${event.title} cover image`}
           sizes="(max-width: 1024px) calc(100vw - 2rem), 42vw"
-          className="aspect-4/3 min-h-72 max-h-136 md:min-h-80 lg:min-h-96 lg:max-h-152"
+          className="aspect-4/3 max-h-136 min-h-72 md:min-h-80 lg:max-h-152 lg:min-h-96"
           dynamicAspect
           imageClassName="object-contain"
           onOpen={
@@ -649,13 +578,13 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 href={cta.href}
                 target={
                   event.cta_type === "external_link" ||
-                    event.cta_type === "whatsapp"
+                  event.cta_type === "whatsapp"
                     ? "_blank"
                     : undefined
                 }
                 rel={
                   event.cta_type === "external_link" ||
-                    event.cta_type === "whatsapp"
+                  event.cta_type === "whatsapp"
                     ? "noreferrer"
                     : undefined
                 }
@@ -671,7 +600,11 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 onClick={() => setActiveImageIndex(0)}
                 className="inline-flex min-h-10 max-w-full items-center justify-center gap-2 rounded-md border border-border/80 bg-surface-raised px-4 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
-                <HugeiconsIcon icon={Image01Icon} strokeWidth={2} className="size-4" />
+                <HugeiconsIcon
+                  icon={Image01Icon}
+                  strokeWidth={2}
+                  className="size-4"
+                />
                 <span>View images</span>
                 <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
                   {imageCount}

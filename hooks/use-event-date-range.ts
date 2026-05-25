@@ -36,10 +36,16 @@ function isAfterDateTime(value: string, comparisonValue: string) {
 }
 
 export function useEventDateRange(options: EventDateRangeOptions) {
-  const [startsAt, setStartsAt] = useState(() => formatDateTimeLocal(options.startsAt))
-  const [endsAt, setEndsAt] = useState(() => formatDateTimeLocal(options.endsAt))
+  const [startsAt, setStartsAt] = useState(() =>
+    formatDateTimeLocal(options.startsAt)
+  )
+  const [endsAt, setEndsAt] = useState(() =>
+    formatDateTimeLocal(options.endsAt)
+  )
   const [endsAtPickerKey, setEndsAtPickerKey] = useState(0)
-  const hasInvalidEndDate = Boolean(startsAt && endsAt && !isAfterDateTime(endsAt, startsAt))
+  const hasInvalidEndDate = Boolean(
+    startsAt && endsAt && !isAfterDateTime(endsAt, startsAt)
+  )
 
   const handleStartsAtChange = useCallback(
     (nextStartsAt: string) => {

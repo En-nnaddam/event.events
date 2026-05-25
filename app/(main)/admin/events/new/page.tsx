@@ -1,8 +1,8 @@
-import Link from "next/link"
 import { redirect } from "next/navigation"
 
 import { EventForm } from "@/components/admin/event-form"
-import type { CategoryOption } from "@/lib/admin/events"
+import { PageHeader, PageShell } from "@/components/layout/page-shell"
+import { getCategoryOptions } from "@/lib/admin/event-queries"
 import { createClient } from "@/lib/supabase/server"
 
 import { cleanupEventImages, createEvent, updateEventImages } from "../actions"
@@ -18,42 +18,30 @@ export default async function NewEventPage({
 }: NewEventPageProps) {
   const params = await searchParams
   const supabase = await createClient()
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id,name")
-    .order("name", { ascending: true })
-    .returns<CategoryOption[]>()
+  const categories = await getCategoryOptions(supabase)
 
-  if (!categories?.length) {
+  if (!categories.length) {
     redirect("/admin/events?error=missing_categories")
   }
 
   return (
-    <main className="min-h-svh bg-background p-6">
-      <section className="mx-auto max-w-4xl py-10">
-        <div className="mb-6">
-          <Link
-            href="/admin/events"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Events management
-          </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">
-            Create event
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Add a public or archived event using the existing category list.
-          </p>
-        </div>
-
-        <EventForm
-          action={createEvent}
-          categories={categories}
-          cleanupAction={cleanupEventImages}
-          error={params.error}
-          imageAction={updateEventImages}
+    <PageShell maxWidth="md">
+      <div className="mb-6">
+        <PageHeader
+          backHref="/admin/events"
+          backLabel="Events management"
+          title="Create event"
+          description="Add a public or archived event using the existing category list."
         />
-      </section>
-    </main>
+      </div>
+
+      <EventForm
+        action={createEvent}
+        categories={categories}
+        cleanupAction={cleanupEventImages}
+        error={params.error}
+        imageAction={updateEventImages}
+      />
+    </PageShell>
   )
 }

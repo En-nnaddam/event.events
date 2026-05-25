@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom"
 
+import { Panel } from "@/components/layout/page-shell"
 import { Button } from "@/components/ui/button"
 
 import { startGoogleAuth } from "./actions"
@@ -18,15 +19,17 @@ function SubmitButton() {
 
 export function AuthForm() {
   return (
-    <div className="w-full max-w-md rounded-lg border border-border bg-card p-5 shadow-sm">
+    <Panel className="w-full max-w-md p-5">
       <div className="mb-5">
         <h1 className="text-2xl font-semibold tracking-normal">Sign in</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Continue with Google to use your account.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Continue with Google to use your account.
+        </p>
       </div>
 
       <form action={startGoogleAuth} className="grid gap-4">
         <SubmitButton />
       </form>
-    </div>
+    </Panel>
   )
 }

@@ -3,13 +3,16 @@
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
-import { DatePicker } from "@/components/admin/date-picker"
+import { type EventCtaInputHandle } from "@/components/admin/event-cta-input"
 import {
-  EventCtaInput,
-  type EventCtaInputHandle,
-} from "@/components/admin/event-cta-input"
-import { ImageSelector } from "@/components/admin/image-selector"
-import { CountryCombobox } from "@/components/ui/country-combobox"
+  EventCoreDetailsSection,
+  EventCtaSection,
+  EventDateLocationSection,
+  EventImagesSection,
+  EventProgressPanel,
+} from "@/components/admin/event-form-sections"
+import { ErrorNotice, SubmitButton } from "@/components/layout/page-shell"
+import { buttonVariants } from "@/components/ui/button"
 import { useEventDateRange } from "@/hooks/use-event-date-range"
 import {
   buildEventCoverImagePath,
@@ -24,6 +27,7 @@ import {
   uploadPublicFile,
   type UploadedPublicFile,
 } from "@/lib/supabase/storage-client"
+import { cn } from "@/lib/utils"
 
 type EventActionResult = {
   eventId?: string
@@ -67,7 +71,8 @@ const errorMessages: Record<string, string> = {
   missing_cta_phone: "Phone and WhatsApp CTAs require a phone number.",
   missing_cta_url: "External link CTAs require a URL.",
   missing_event: "The selected event could not be found.",
-  generating_slug_failed: "Could not generate a valid slug for the event. Please try again.",
+  generating_slug_failed:
+    "Could not generate a valid slug for the event. Please try again.",
   missing_fields: "Fill in the required event fields.",
   past_date: "Use today or a future date.",
   save_failed: "The event could not be saved.",
@@ -83,47 +88,6 @@ const progressLabels: Record<ProgressStage, string> = {
   saving: "Saving event...",
   uploading: "Uploading images...",
   validating: "Validating form...",
-}
-
-const inputClassName =
-  "min-h-10 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/30"
-
-function Field({
-  children,
-  label,
-  required,
-}: {
-  children: React.ReactNode
-  label: string
-  required?: boolean
-}) {
-  return (
-    <label className="grid gap-2 text-sm font-medium text-foreground">
-      <span>
-        {label}
-        {required ? <span className="text-destructive"> *</span> : null}
-      </span>
-      {children}
-    </label>
-  )
-}
-
-function SubmitButton({
-  label,
-  processing,
-}: {
-  label: string
-  processing: boolean
-}) {
-  return (
-    <button
-      type="submit"
-      disabled={processing}
-      className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/85 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
-    >
-      {processing ? "Working..." : label}
-    </button>
-  )
 }
 
 function getImageExtension(file: File) {
@@ -183,11 +147,11 @@ export function EventForm({
     () =>
       event?.cover_image_url
         ? [
-          {
-            url: event.cover_image_url,
-            label: "Current cover image",
-          },
-        ]
+            {
+              url: event.cover_image_url,
+              label: "Current cover image",
+            },
+          ]
         : [],
     [event]
   )
@@ -383,11 +347,11 @@ export function EventForm({
       ]
       const removedImageUrls = event
         ? [
-          ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl
-            ? [event.cover_image_url]
-            : []),
-          ...event.images.filter((image) => !keptGalleryUrls.includes(image)),
-        ]
+            ...(event.cover_image_url && event.cover_image_url !== finalCoverUrl
+              ? [event.cover_image_url]
+              : []),
+            ...event.images.filter((image) => !keptGalleryUrls.includes(image)),
+          ]
         : []
 
       if (finalCoverUrl) {
@@ -522,207 +486,56 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
-      {message ? (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {message}
-        </div>
-      ) : null}
+      <ErrorNotice message={message} />
 
-      <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-        <div>
-          <h2 className="text-lg font-semibold tracking-normal">
-            Core details
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            These fields control how the event appears publicly.
-          </p>
-        </div>
+      <EventCoreDetailsSection
+        categories={categories}
+        event={event}
+        title={title}
+        onTitleChange={setTitle}
+      />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Title" required>
-            <input
-              className={inputClassName}
-              name="title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-            />
-          </Field>
+      <EventDateLocationSection
+        endsAt={endsAt}
+        endsAtPickerKey={endsAtPickerKey}
+        event={event}
+        handleEndsAtChange={handleEndsAtChange}
+        handleStartsAtChange={handleStartsAtChange}
+        hasInvalidEndDate={hasInvalidEndDate}
+        minEventDate={minEventDate}
+        startsAt={startsAt}
+      />
 
-          <Field label="Category" required>
-            <select
-              className={inputClassName}
-              name="category_id"
-              defaultValue={event?.category_id ?? ""}
-              required
-            >
-              <option value="" disabled>
-                Select category
-              </option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
+      <EventImagesSection
+        existingCoverImages={existingCoverImages}
+        existingGalleryImages={existingGalleryImages}
+        onCoverFilesChange={setCoverFiles}
+        onGalleryFilesChange={setGalleryFiles}
+        onKeptCoverChange={setKeptCoverUrls}
+        onKeptGalleryChange={setKeptGalleryUrls}
+      />
 
-        <Field label="Description">
-          <textarea
-            className={`${inputClassName} min-h-32 resize-y`}
-            name="description"
-            defaultValue={event?.description ?? ""}
-          />
-        </Field>
-      </section>
-
-      <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-        <div>
-          <h2 className="text-lg font-semibold tracking-normal">
-            When and where
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Dates, city, and venue details shown on event cards.
-          </p>
-        </div>
-
-        <div className="grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="City" required>
-              <input
-                className={inputClassName}
-                name="city"
-                defaultValue={event?.city ?? ""}
-                required
-              />
-            </Field>
-
-            <Field label="Country">
-              <CountryCombobox
-                defaultValue={event?.country_code}
-                name="country_code"
-              />
-            </Field>
-          </div>
-
-          <Field label="Location">
-            <input
-              className={inputClassName}
-              name="location"
-              defaultValue={event?.location ?? ""}
-            />
-          </Field>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Starts at" required>
-              <DatePicker
-                allowPastValue={Boolean(event)}
-                minDate={minEventDate}
-                name="starts_at"
-                value={startsAt}
-                onChange={handleStartsAtChange}
-                required
-              />
-            </Field>
-
-            <Field label="Ends at">
-              <DatePicker
-                allowPastValue={Boolean(event)}
-                key={endsAtPickerKey}
-                error={
-                  hasInvalidEndDate
-                    ? "End date must be after the start date."
-                    : undefined
-                }
-                minDate={minEventDate}
-                name="ends_at"
-                value={endsAt}
-                onChange={handleEndsAtChange}
-              />
-            </Field>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-        <div>
-          <h2 className="text-lg font-semibold tracking-normal">Images</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Images are optimized before uploading.
-          </p>
-        </div>
-
-        <ImageSelector
-          label="Cover image"
-          description="Use one strong image for the event card hero."
-          existingImages={existingCoverImages}
-          onExistingChange={setKeptCoverUrls}
-          onFilesChange={setCoverFiles}
-        />
-
-        <ImageSelector
-          label="Gallery images"
-          description="Add supporting images that appear under the cover."
-          multiple
-          existingImages={existingGalleryImages}
-          onExistingChange={setKeptGalleryUrls}
-          onFilesChange={setGalleryFiles}
-        />
-      </section>
-
-      <section className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm">
-        <div>
-          <h2 className="text-lg font-semibold tracking-normal">
-            Call to action
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose how visitors can contact or book.
-          </p>
-        </div>
-
-        <EventCtaInput ref={ctaInputRef} event={event} />
-      </section>
+      <EventCtaSection ctaInputRef={ctaInputRef} event={event} />
 
       {progressStage !== "idle" ? (
-        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium">
-              {progressLabels[progressStage]}
-            </p>
-            {processing ? (
-              <p className="text-xs text-muted-foreground">
-                Please keep this page open.
-              </p>
-            ) : null}
-          </div>
-          {progressDetail ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {progressDetail}
-            </p>
-          ) : null}
-          {optimizationSummary ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              {optimizationSummary}
-            </p>
-          ) : null}
-          {processing ? (
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-1/2 animate-pulse rounded-full bg-primary" />
-            </div>
-          ) : null}
-        </div>
+        <EventProgressPanel
+          detail={progressDetail}
+          label={progressLabels[progressStage]}
+          optimizationSummary={optimizationSummary}
+          processing={processing}
+        />
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton
-          label={event ? "Save event" : "Create event"}
-          processing={processing}
-        />
+        <SubmitButton processing={processing}>
+          {event ? "Save event" : "Create event"}
+        </SubmitButton>
         <a
           href="/admin/events"
-          className={`inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none ${processing ? "pointer-events-none opacity-50" : ""
-            }`}
+          className={cn(
+            buttonVariants({ size: "lg", variant: "outline" }),
+            processing && "pointer-events-none opacity-50"
+          )}
         >
           Cancel
         </a>

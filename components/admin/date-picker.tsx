@@ -5,7 +5,11 @@ import { Calendar01Icon, Clock01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -24,7 +28,9 @@ type TimeParts = {
   minute: string
 }
 
-const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"))
+const hourOptions = Array.from({ length: 24 }, (_, index) =>
+  String(index).padStart(2, "0")
+)
 const minuteOptions = ["00", "15", "30", "45"]
 const defaultTimeValue = "08:00"
 
@@ -33,7 +39,8 @@ function getTriggerClassName(hasError: boolean) {
     buttonVariants({ variant: "outline" }),
     "h-10 w-full justify-start gap-2 rounded-md px-3 text-left font-normal",
     !hasError && "border-border",
-    hasError && "border-destructive text-destructive focus-visible:border-destructive focus-visible:ring-destructive/20"
+    hasError &&
+      "border-destructive text-destructive focus-visible:border-destructive focus-visible:ring-destructive/20"
   )
 }
 
@@ -62,7 +69,9 @@ function splitDateTime(value: string) {
   const [year = "", month = "", day = ""] = datePart.split("-")
   const [hour = "", minute = ""] = timePart.split(":")
   const selectedDate =
-    year && month && day ? new Date(Number(year), Number(month) - 1, Number(day)) : undefined
+    year && month && day
+      ? new Date(Number(year), Number(month) - 1, Number(day))
+      : undefined
 
   return {
     date: selectedDate,
@@ -103,7 +112,9 @@ export function DatePicker({
   const initialValue = useMemo(() => splitDateTime(value), [value])
   const [dateOpen, setDateOpen] = useState(false)
   const [timeOpen, setTimeOpen] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(initialValue.date)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    initialValue.date
+  )
   const [timeValue, setTimeValue] = useState(initialValue.time)
   const hiddenValue = buildDateTime(selectedDate, timeValue)
   const timeError = Boolean(timeValue && !parseTime(timeValue))
@@ -140,8 +151,12 @@ export function DatePicker({
   }
 
   function updateTimePart(part: keyof TimeParts, nextValue: string) {
-    const time = parseTime(timeValue) ?? parseTime(defaultTimeValue) ?? { hour: "08", minute: "00" }
-    const nextTimeValue = part === "hour" ? `${nextValue}:${time.minute}` : `${time.hour}:${nextValue}`
+    const time = parseTime(timeValue) ??
+      parseTime(defaultTimeValue) ?? { hour: "08", minute: "00" }
+    const nextTimeValue =
+      part === "hour"
+        ? `${nextValue}:${time.minute}`
+        : `${time.hour}:${nextValue}`
 
     updateTime(nextTimeValue)
   }
@@ -166,8 +181,16 @@ export function DatePicker({
             className={getTriggerClassName(hasError)}
             type="button"
           >
-            <HugeiconsIcon icon={Calendar01Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
-            <span className={selectedDate ? "text-foreground" : "text-muted-foreground"}>
+            <HugeiconsIcon
+              icon={Calendar01Icon}
+              strokeWidth={2}
+              className="size-4 text-muted-foreground"
+            />
+            <span
+              className={
+                selectedDate ? "text-foreground" : "text-muted-foreground"
+              }
+            >
               {formatDateLabel(selectedDate)}
             </span>
           </PopoverTrigger>
@@ -189,19 +212,27 @@ export function DatePicker({
             className={getTriggerClassName(hasError)}
             type="button"
           >
-            <HugeiconsIcon icon={Clock01Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
+            <HugeiconsIcon
+              icon={Clock01Icon}
+              strokeWidth={2}
+              className="size-4 text-muted-foreground"
+            />
             <span className="text-foreground">{timeValue}</span>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64 p-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <p className="px-1 text-xs font-medium text-muted-foreground">Hour</p>
+                <p className="px-1 text-xs font-medium text-muted-foreground">
+                  Hour
+                </p>
                 <div className="grid max-h-48 grid-cols-2 gap-1 overflow-y-auto pr-1">
                   {hourOptions.map((hour) => (
                     <Button
                       key={hour}
                       type="button"
-                      variant={timeValue.startsWith(`${hour}:`) ? "default" : "ghost"}
+                      variant={
+                        timeValue.startsWith(`${hour}:`) ? "default" : "ghost"
+                      }
                       size="sm"
                       className="rounded-md"
                       onClick={() => updateTimePart("hour", hour)}
@@ -213,13 +244,17 @@ export function DatePicker({
               </div>
 
               <div className="grid gap-2">
-                <p className="px-1 text-xs font-medium text-muted-foreground">Minute</p>
+                <p className="px-1 text-xs font-medium text-muted-foreground">
+                  Minute
+                </p>
                 <div className="grid gap-1">
                   {minuteOptions.map((minute) => (
                     <Button
                       key={minute}
                       type="button"
-                      variant={timeValue.endsWith(`:${minute}`) ? "default" : "ghost"}
+                      variant={
+                        timeValue.endsWith(`:${minute}`) ? "default" : "ghost"
+                      }
                       size="sm"
                       className="rounded-md"
                       onClick={() => updateTimePart("minute", minute)}

@@ -1,10 +1,14 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
 
-function redirectWithCookies(request: NextRequest, response: NextResponse, pathname: string) {
+function redirectWithCookies(
+  request: NextRequest,
+  response: NextResponse,
+  pathname: string
+) {
   const url = request.nextUrl.clone()
   url.pathname = pathname
-  url.search = ''
+  url.search = ""
 
   const redirectResponse = NextResponse.redirect(url)
   response.cookies.getAll().forEach((cookie) => {
@@ -30,7 +34,9 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -52,20 +58,20 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims
 
   const pathname = request.nextUrl.pathname
-  const isAuthRoute = pathname.startsWith('/auth')
-  const isAdminLogin = pathname === '/admin/login'
-  const isAdminRoute = pathname.startsWith('/admin') && !isAdminLogin
-  const isProfileSetupRoute = pathname === '/profile/setup'
-  const isUserRoute = pathname.startsWith('/user')
+  const isAuthRoute = pathname.startsWith("/auth")
+  const isAdminLogin = pathname === "/admin/login"
+  const isAdminRoute = pathname.startsWith("/admin") && !isAdminLogin
+  const isProfileSetupRoute = pathname === "/profile/setup"
+  const isUserRoute = pathname.startsWith("/user")
   const isProtectedRoute = isAdminRoute || isProfileSetupRoute || isUserRoute
 
   if (!user) {
     if (isAdminRoute) {
-      return redirectWithCookies(request, supabaseResponse, '/admin/login')
+      return redirectWithCookies(request, supabaseResponse, "/admin/login")
     }
 
     if (isProtectedRoute) {
-      return redirectWithCookies(request, supabaseResponse, '/auth')
+      return redirectWithCookies(request, supabaseResponse, "/auth")
     }
 
     return supabaseResponse
@@ -73,36 +79,60 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute || isAdminLogin || isProtectedRoute) {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('role,full_name')
-      .eq('id', user.sub)
-      .maybeSingle<{ role: 'user' | 'admin'; full_name: string | null }>()
+      .from("profiles")
+      .select("role,full_name")
+      .eq("id", user.sub)
+      .maybeSingle<{ role: "user" | "admin"; full_name: string | null }>()
 
     if (!profile) {
       await supabase.auth.signOut()
-      return redirectWithCookies(request, supabaseResponse, '/auth')
+      return redirectWithCookies(request, supabaseResponse, "/auth")
     }
 
     const hasCompletedProfile = Boolean(profile.full_name?.trim())
     const postLoginDestination =
-      profile.role === 'admin' ? '/admin' : hasCompletedProfile ? '/' : '/profile/setup'
+      profile.role === "admin"
+        ? "/admin"
+        : hasCompletedProfile
+          ? "/"
+          : "/profile/setup"
     const protectedDestination =
-      profile.role === 'admin' ? '/admin' : hasCompletedProfile ? '/user' : '/profile/setup'
+      profile.role === "admin"
+        ? "/admin"
+        : hasCompletedProfile
+          ? "/user"
+          : "/profile/setup"
 
     if (isAuthRoute || isAdminLogin) {
-      return redirectWithCookies(request, supabaseResponse, postLoginDestination)
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        postLoginDestination
+      )
     }
 
-    if (isAdminRoute && profile.role !== 'admin') {
-      return redirectWithCookies(request, supabaseResponse, protectedDestination)
+    if (isAdminRoute && profile.role !== "admin") {
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        protectedDestination
+      )
     }
 
-    if (isProfileSetupRoute && protectedDestination !== '/profile/setup') {
-      return redirectWithCookies(request, supabaseResponse, protectedDestination)
+    if (isProfileSetupRoute && protectedDestination !== "/profile/setup") {
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        protectedDestination
+      )
     }
 
-    if (isUserRoute && protectedDestination !== '/user') {
-      return redirectWithCookies(request, supabaseResponse, protectedDestination)
+    if (isUserRoute && protectedDestination !== "/user") {
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        protectedDestination
+      )
     }
   }
 

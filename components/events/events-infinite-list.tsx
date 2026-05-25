@@ -4,37 +4,22 @@ import { useCallback, useEffect, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
-import { EventCard, type EventFeedItem } from "@/components/events/event-card"
+import { EventCard } from "@/components/events/event-card"
 import {
   useInfiniteQuery,
   type SupabaseQueryHandler,
 } from "@/hooks/use-infinite-query"
+import {
+  PUBLIC_EVENT_COLUMNS,
+  PUBLIC_EVENTS_PAGE_SIZE,
+} from "@/lib/admin/events"
 import {
   getEventFilters,
   getFilterLabel,
   hasEventFilters,
   type EventFilterCategory,
 } from "@/lib/events/filters"
-
-const PAGE_SIZE = 6
-const EVENT_COLUMNS = `
-  id,
-  title,
-  description,
-  city,
-  country_code,
-  location,
-  starts_at,
-  ends_at,
-  cover_image_url,
-  images,
-  cta_type,
-  cta_url,
-  cta_phone,
-  categories (
-    name
-  )
-`
+import type { EventFeedItem } from "@/lib/events/types"
 
 function EventSkeleton() {
   return (
@@ -164,8 +149,8 @@ export function EventsInfiniteList({
     isSuccess,
   } = useInfiniteQuery<EventFeedItem>({
     tableName: "events",
-    columns: EVENT_COLUMNS,
-    pageSize: PAGE_SIZE,
+    columns: PUBLIC_EVENT_COLUMNS,
+    pageSize: PUBLIC_EVENTS_PAGE_SIZE,
     queryKey,
     trailingQuery: onlyPublishedEvents,
   })

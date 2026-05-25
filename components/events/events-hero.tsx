@@ -10,13 +10,14 @@ export function EventsHero() {
             Discover events without waiting at the door.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Browse published events, see the important details in one place, and contact the organizer directly when an event fits your plans.
+            Browse published events, see the important details in one place, and
+            contact the organizer directly when an event fits your plans.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
               href="#events"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/40 dark:shadow-lg"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none dark:shadow-lg"
             >
               Browse events
             </a>

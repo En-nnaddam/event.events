@@ -7,7 +7,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { AuthAvatar } from "@/components/auth/auth-avatar"
 import { buttonVariants } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import type { CurrentAuth } from "@/lib/auth/current"
 import { cn } from "@/lib/utils"
 
@@ -32,7 +36,8 @@ export function AuthMenu({ currentAuth, children }: AuthMenuProps) {
         className={cn(
           buttonVariants({ variant: "outline" }),
           "h-10 gap-2 rounded-4xl px-1.5 pr-2.5",
-          isAdmin && "border-primary/30 bg-primary/5 ring-1 ring-primary/10 hover:bg-primary/10"
+          isAdmin &&
+            "border-primary/30 bg-primary/5 ring-1 ring-primary/10 hover:bg-primary/10"
         )}
       >
         <AuthAvatar
@@ -41,7 +46,7 @@ export function AuthMenu({ currentAuth, children }: AuthMenuProps) {
           isAdmin={isAdmin}
         />
         {isAdmin ? (
-          <span className="rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-primary">
+          <span className="rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-primary uppercase">
             Admin
           </span>
         ) : null}
@@ -67,21 +72,28 @@ export function AuthMenu({ currentAuth, children }: AuthMenuProps) {
           />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {displayName}
+              </p>
               {isAdmin ? (
-                <span className="rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-primary">
+                <span className="rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-primary uppercase">
                   Admin
                 </span>
               ) : null}
             </div>
-            <p className="text-xs font-medium text-muted-foreground">{sessionLabel}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {sessionLabel}
+            </p>
           </div>
         </div>
 
         <div className="grid gap-2">
           <Link
             href={currentAuth.destination}
-            className={cn(buttonVariants({ variant: "ghost" }), "h-9 justify-start rounded-xl px-3")}
+            className={cn(
+              buttonVariants({ variant: "ghost" }),
+              "h-9 justify-start rounded-xl px-3"
+            )}
           >
             {destinationLabel}
           </Link>

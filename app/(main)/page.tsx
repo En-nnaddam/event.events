@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { EventsFilterBar } from "@/components/events/events-filter-bar"
 import { EventsHero } from "@/components/events/events-hero"
 import { EventsInfiniteList } from "@/components/events/events-infinite-list"
-import type { EventFilterCategory } from "@/lib/events/filters"
+import { getEventFilterCategories } from "@/lib/admin/event-queries"
 import { createClient } from "@/lib/supabase/server"
 
 function EventsFeedSkeleton() {
@@ -25,11 +25,7 @@ function EventsFeedSkeleton() {
 
 export default async function Page() {
   const supabase = await createClient()
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id,name,slug")
-    .order("name", { ascending: true })
-    .returns<EventFilterCategory[]>()
+  const categories = await getEventFilterCategories(supabase)
 
   return (
     <main className="min-h-svh bg-background">
@@ -55,8 +51,8 @@ export default async function Page() {
         </div>
 
         <Suspense fallback={<EventsFeedSkeleton />}>
-          <EventsFilterBar categories={categories ?? []} />
-          <EventsInfiniteList categories={categories ?? []} />
+          <EventsFilterBar categories={categories} />
+          <EventsInfiniteList categories={categories} />
         </Suspense>
       </section>
     </main>

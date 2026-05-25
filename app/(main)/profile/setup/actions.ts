@@ -30,7 +30,10 @@ export async function completeProfile(formData: FormData) {
     redirect("/auth")
   }
 
-  const { error } = await supabase.from("profiles").update({ full_name: fullName }).eq("id", user.id)
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: fullName })
+    .eq("id", user.id)
 
   if (error) {
     redirect("/profile/setup?error=save_failed")

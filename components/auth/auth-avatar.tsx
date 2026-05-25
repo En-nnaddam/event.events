@@ -11,10 +11,7 @@ type AuthAvatarProps = {
 }
 
 function getInitials(name: string | null) {
-  const words = name
-    ?.trim()
-    .split(/\s+/)
-    .filter(Boolean)
+  const words = name?.trim().split(/\s+/).filter(Boolean)
 
   if (!words?.length) {
     return null
@@ -66,7 +63,11 @@ export function AuthAvatar({
       ) : initials ? (
         initials
       ) : (
-        <HugeiconsIcon icon={UserIcon} strokeWidth={2} className={iconSizes[size]} />
+        <HugeiconsIcon
+          icon={UserIcon}
+          strokeWidth={2}
+          className={iconSizes[size]}
+        />
       )}
     </span>
   )

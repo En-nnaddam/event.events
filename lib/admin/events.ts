@@ -1,5 +1,64 @@
 export const EVENT_IMAGE_BUCKET = "event-images"
 export const MAX_EVENT_IMAGE_SIZE = 5 * 1024 * 1024
+export const PUBLIC_EVENTS_PAGE_SIZE = 6
+export const EVENT_STATUS_OPTIONS = ["published", "archived"] as const
+export const EVENT_CTA_TYPES = [
+  "external_link",
+  "whatsapp",
+  "phone",
+  "none",
+] as const
+
+export const CATEGORY_OPTION_COLUMNS = "id,name"
+export const EVENT_FILTER_CATEGORY_COLUMNS = "id,name,slug"
+export const ADMIN_EVENT_LIST_COLUMNS = `
+  id,
+  title,
+  description,
+  city,
+  country_code,
+  location,
+  starts_at,
+  cover_image_url,
+  status,
+  categories (
+    name
+  )
+`
+export const EVENT_FORM_COLUMNS = `
+  id,
+  category_id,
+  title,
+  description,
+  city,
+  country_code,
+  location,
+  starts_at,
+  ends_at,
+  cover_image_url,
+  images,
+  cta_type,
+  cta_url,
+  cta_phone
+`
+export const PUBLIC_EVENT_COLUMNS = `
+  id,
+  title,
+  description,
+  city,
+  country_code,
+  location,
+  starts_at,
+  ends_at,
+  cover_image_url,
+  images,
+  cta_type,
+  cta_url,
+  cta_phone,
+  categories (
+    name
+  )
+`
 
 export type EventStatus = "published" | "archived"
 export type EventCtaType = "external_link" | "whatsapp" | "phone" | "none"
@@ -51,6 +110,26 @@ export type AdminEventListItem = {
   categories: {
     name: string
   } | null
+}
+
+export type AdminRecentEvent = {
+  id: string
+  title: string
+  status: EventStatus
+  city: string
+  starts_at: string
+}
+
+export function getStatus(value: string): EventStatus | null {
+  return EVENT_STATUS_OPTIONS.includes(value as EventStatus)
+    ? (value as EventStatus)
+    : null
+}
+
+export function getCtaType(value: string): EventCtaType | null {
+  return EVENT_CTA_TYPES.includes(value as EventCtaType)
+    ? (value as EventCtaType)
+    : null
 }
 
 export function slugify(value: string) {

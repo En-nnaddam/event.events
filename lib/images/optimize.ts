@@ -66,7 +66,11 @@ async function decodeImage(file: File) {
   })
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality: number
+) {
   return new Promise<Blob | null>((resolve) => {
     canvas.toBlob(resolve, type, quality)
   })
@@ -101,7 +105,8 @@ export async function optimizeImage(
   }
 
   const webpBlob = await canvasToBlob(canvas, "image/webp", quality)
-  const fallbackBlob = webpBlob ?? (await canvasToBlob(canvas, "image/jpeg", quality))
+  const fallbackBlob =
+    webpBlob ?? (await canvasToBlob(canvas, "image/jpeg", quality))
   const blob = fallbackBlob ?? file
   const extension = blob.type === "image/webp" ? "webp" : "jpg"
   const name = file.name.replace(/\.[^.]+$/, "")

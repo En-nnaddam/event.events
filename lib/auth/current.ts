@@ -18,7 +18,9 @@ type ProfileRow = {
   avatar_url: string | null
 }
 
-export async function getCurrentAuth(supabase: SupabaseClient): Promise<CurrentAuth> {
+export async function getCurrentAuth(
+  supabase: SupabaseClient
+): Promise<CurrentAuth> {
   const {
     data: { user },
   } = await supabase.auth.getUser()

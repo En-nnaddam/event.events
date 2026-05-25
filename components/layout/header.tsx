@@ -12,8 +12,11 @@ export async function Header() {
 
   return (
     <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex min-h-16 max-w-6xl gap-3 px-5 py-3 sm:flex-row items-center justify-between sm:px-6 lg:px-8">
-        <Link href="/" className="text-base font-semibold tracking-normal text-foreground">
+      <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:flex-row sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          className="text-base font-semibold tracking-normal text-foreground"
+        >
           Event.Events
         </Link>
 
@@ -23,7 +26,10 @@ export async function Header() {
               <LogoutForm buttonClassName="h-9 w-full justify-start rounded-xl px-3" />
             </AuthMenu>
           ) : (
-            <Link href="/auth" className={buttonVariants({ variant: "outline" })}>
+            <Link
+              href="/auth"
+              className={buttonVariants({ variant: "outline" })}
+            >
               Login
             </Link>
           )}
