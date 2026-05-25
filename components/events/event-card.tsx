@@ -14,6 +14,7 @@ import Image from "next/image"
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useState,
   type CSSProperties,
@@ -34,6 +35,46 @@ type EventImageItem = {
   alt: string
   src: string
   title: string
+}
+
+const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 360
+const DESCRIPTION_PREVIEW_LINE_LIMIT = 6
+
+function EventDescription({ description }: { description: string }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const descriptionId = useId()
+  const lineCount = description.split(/\r\n|\r|\n/).length
+  const shouldClamp =
+    description.length > DESCRIPTION_PREVIEW_CHARACTER_LIMIT ||
+    lineCount > DESCRIPTION_PREVIEW_LINE_LIMIT
+
+  return (
+    <div className="mt-3 max-w-3xl">
+      <p
+        id={descriptionId}
+        className={cn(
+          "text-sm leading-6 whitespace-pre-line wrap-anywhere text-muted-foreground",
+          shouldClamp &&
+            !isExpanded &&
+            "max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_72%,transparent_100%)]"
+        )}
+      >
+        {description}
+      </p>
+
+      {shouldClamp ? (
+        <button
+          type="button"
+          aria-controls={descriptionId}
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded((currentValue) => !currentValue)}
+          className="mt-2 inline-flex rounded-md text-sm font-medium text-primary transition hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+        >
+          {isExpanded ? "Show less" : "Show more"}
+        </button>
+      ) : null}
+    </div>
+  )
 }
 
 function EventImage({
@@ -529,9 +570,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               {event.title}
             </h2>
             {event.description ? (
-              <p className="mt-3 max-w-3xl text-sm leading-6 whitespace-pre-line text-muted-foreground">
-                {event.description}
-              </p>
+              <EventDescription description={event.description} />
             ) : null}
           </div>
 

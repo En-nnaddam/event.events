@@ -109,7 +109,7 @@ export function EventsInfiniteList({
     (query) => {
       let nextQuery = query
         .eq("status", "published")
-        .order("starts_at", { ascending: true })
+        .order("created_at", { ascending: false })
 
       if (filters.category) {
         nextQuery = nextQuery.eq("category_id", filters.category.id)
