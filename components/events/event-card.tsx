@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-import { useEffect, useMemo, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
 
 import { getEventCtaLabel, type EventCtaType } from "@/lib/admin/events"
 import { CountryFlag, getCountryOption } from "@/lib/countries"
@@ -308,6 +308,12 @@ function ImageModal({
   const isActiveImageLoaded = activeImage
     ? loadedImageSrcs.has(activeImage.src)
     : false
+  const goPrevious = useCallback(() => {
+    onSelect((activeIndex - 1 + images.length) % images.length)
+  }, [activeIndex, images.length, onSelect])
+  const goNext = useCallback(() => {
+    onSelect((activeIndex + 1) % images.length)
+  }, [activeIndex, images.length, onSelect])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -316,11 +322,11 @@ function ImageModal({
       }
 
       if (event.key === "ArrowLeft" && hasMultipleImages) {
-        onSelect((activeIndex - 1 + images.length) % images.length)
+        goPrevious()
       }
 
       if (event.key === "ArrowRight" && hasMultipleImages) {
-        onSelect((activeIndex + 1) % images.length)
+        goNext()
       }
     }
 
@@ -332,7 +338,7 @@ function ImageModal({
       document.removeEventListener("keydown", handleKeyDown)
       document.body.style.overflow = previousOverflow
     }
-  }, [activeIndex, hasMultipleImages, images.length, onClose, onSelect])
+  }, [goNext, goPrevious, hasMultipleImages, onClose])
 
   useEffect(() => {
     if (!activeImage) {
@@ -393,7 +399,7 @@ function ImageModal({
           </button>
         </div>
 
-        <div className="relative h-[72vh] min-h-80 overflow-hidden rounded-lg bg-black">
+        <div className="relative h-[68svh] min-h-80 overflow-hidden rounded-lg bg-black sm:h-[72vh]">
           <Image
             src={activeImage.src}
             alt=""
@@ -433,18 +439,16 @@ function ImageModal({
             <>
               <button
                 type="button"
-                onClick={() =>
-                  onSelect((activeIndex - 1 + images.length) % images.length)
-                }
-                className="absolute top-1/2 left-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+                onClick={goPrevious}
+                className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none sm:inline-flex"
                 aria-label="Show previous image"
               >
                 <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
               </button>
               <button
                 type="button"
-                onClick={() => onSelect((activeIndex + 1) % images.length)}
-                className="absolute top-1/2 right-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+                onClick={goNext}
+                className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-md bg-black/55 text-white transition hover:bg-black/75 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none sm:inline-flex"
                 aria-label="Show next image"
               >
                 <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-5" />
@@ -452,6 +456,30 @@ function ImageModal({
             </>
           ) : null}
         </div>
+
+        {hasMultipleImages ? (
+          <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-3 text-white sm:hidden">
+            <button
+              type="button"
+              onClick={goPrevious}
+              className="inline-flex size-10 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+              aria-label="Show previous image"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-5" />
+            </button>
+            <p className="text-center text-xs font-semibold text-white/80">
+              {activeIndex + 1} / {images.length}
+            </p>
+            <button
+              type="button"
+              onClick={goNext}
+              className="inline-flex size-10 items-center justify-center rounded-md bg-white/10 transition hover:bg-white/20 focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none"
+              aria-label="Show next image"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-5" />
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   )
