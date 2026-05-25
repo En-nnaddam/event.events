@@ -347,10 +347,10 @@ function ImageModal({
 
     const preloadIndexes = hasMultipleImages
       ? [
-          activeIndex,
-          (activeIndex - 1 + images.length) % images.length,
-          (activeIndex + 1) % images.length,
-        ]
+        activeIndex,
+        (activeIndex - 1 + images.length) % images.length,
+        (activeIndex + 1) % images.length,
+      ]
       : [activeIndex]
 
     preloadIndexes.forEach((index) => {
@@ -499,12 +499,12 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   const imageItems = useMemo<EventImageItem[]>(() => {
     const coverImage = event.cover_image_url
       ? [
-          {
-            alt: `${event.title} cover image`,
-            src: event.cover_image_url,
-            title: `${event.title} cover image`,
-          },
-        ]
+        {
+          alt: `${event.title} cover image`,
+          src: event.cover_image_url,
+          title: `${event.title} cover image`,
+        },
+      ]
       : []
 
     return [
@@ -644,24 +644,24 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         {cta || hasImages ? (
           <div className="flex flex-wrap items-center gap-3 pt-1">
             {cta ? (
-            <a
-              href={cta.href}
-              target={
-                event.cta_type === "external_link" ||
-                event.cta_type === "whatsapp"
-                  ? "_blank"
-                  : undefined
-              }
-              rel={
-                event.cta_type === "external_link" ||
-                event.cta_type === "whatsapp"
-                  ? "noreferrer"
-                  : undefined
-              }
-              className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
-            >
-              {cta.label}
-            </a>
+              <a
+                href={cta.href}
+                target={
+                  event.cta_type === "external_link" ||
+                    event.cta_type === "whatsapp"
+                    ? "_blank"
+                    : undefined
+                }
+                rel={
+                  event.cta_type === "external_link" ||
+                    event.cta_type === "whatsapp"
+                    ? "noreferrer"
+                    : undefined
+                }
+                className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+              >
+                {cta.label}
+              </a>
             ) : null}
 
             {hasImages ? (
