@@ -11,14 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-  type CSSProperties,
-} from "react"
+import { useCallback, useEffect, useId, useMemo, useState } from "react"
 
 import { CountryFlag, getCountryOption } from "@/lib/countries"
 import {
@@ -125,8 +118,6 @@ function EventImage({
   alt,
   src,
   className,
-  dynamicAspect = false,
-  imageClassName,
   onOpen,
   sizes,
   title,
@@ -134,22 +125,10 @@ function EventImage({
   alt: string
   src: string | null
   className?: string
-  dynamicAspect?: boolean
-  imageClassName?: string
   onOpen?: () => void
   sizes: string
   title: string
 }) {
-  const [imageAspect, setImageAspect] = useState<{
-    ratio: number
-    src: string
-  } | null>(null)
-  const aspectRatio = imageAspect?.src === src ? imageAspect.ratio : null
-  const imageStyle: CSSProperties | undefined =
-    dynamicAspect && aspectRatio
-      ? { aspectRatio: String(aspectRatio) }
-      : undefined
-
   if (!src) {
     return (
       <div
@@ -171,42 +150,22 @@ function EventImage({
         "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
-      style={imageStyle}
       aria-label={`Open ${title}`}
     >
-      {dynamicAspect ? (
-        <Image
-          src={src}
-          alt=""
-          fill
-          sizes={sizes}
-          className="scale-105 object-cover opacity-35 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-30"
-          aria-hidden="true"
-        />
-      ) : null}
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes={sizes}
+        className="scale-105 object-cover opacity-35 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-30"
+        aria-hidden="true"
+      />
       <Image
         src={src}
         alt={alt}
         fill
         sizes={sizes}
-        className={cn(
-          "transition duration-200 group-hover:scale-[1.02]",
-          imageClassName ?? "object-cover"
-        )}
-        onLoad={(event) => {
-          if (!dynamicAspect) {
-            return
-          }
-
-          const image = event.currentTarget
-
-          if (image.naturalWidth > 0 && image.naturalHeight > 0) {
-            setImageAspect({
-              ratio: image.naturalWidth / image.naturalHeight,
-              src,
-            })
-          }
-        }}
+        className="object-contain transition duration-200 group-hover:scale-[1.02]"
       />
     </button>
   )
@@ -641,32 +600,11 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           src={event.cover_image_url}
           title={`${event.title} cover image`}
           sizes="(max-width: 1024px) calc(100vw - 2rem), 42vw"
-          className="aspect-4/3 max-h-136 min-h-72 md:min-h-80 lg:max-h-152 lg:min-h-96"
-          dynamicAspect
-          imageClassName="object-contain"
+          className="aspect-square min-h-72 md:min-h-80 lg:min-h-96"
           onOpen={
             event.cover_image_url ? () => setActiveImageIndex(0) : undefined
           }
         />
-
-        {galleryImages.length > 0 ? (
-          <div className="flex max-w-full min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-1">
-            {galleryImages.map((image, index) => (
-              <EventImage
-                key={image}
-                alt={`${event.title} gallery image ${index + 1}`}
-                src={image}
-                title={`${event.title} gallery image ${index + 1}`}
-                sizes="7rem"
-                className="aspect-square size-24 min-h-0 shrink-0 snap-start rounded-md sm:size-28"
-                imageClassName="object-cover"
-                onOpen={() =>
-                  setActiveImageIndex(event.cover_image_url ? index + 1 : index)
-                }
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-col gap-5 lg:min-h-full lg:justify-between">
