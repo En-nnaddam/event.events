@@ -37,44 +37,88 @@ type EventImageItem = {
   title: string
 }
 
-const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 360
-const DESCRIPTION_PREVIEW_LINE_LIMIT = 6
+const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 280
+const DESCRIPTION_PREVIEW_LINE_LIMIT = 4
 
 function EventDescription({ description }: { description: string }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const descriptionId = useId()
-  const lineCount = description.split(/\r\n|\r|\n/).length
-  const shouldClamp =
-    description.length > DESCRIPTION_PREVIEW_CHARACTER_LIMIT ||
-    lineCount > DESCRIPTION_PREVIEW_LINE_LIMIT
+  const trimmedDescription = description.trim()
+  const previewDescription = getDescriptionPreview(trimmedDescription)
+  const lineCount = trimmedDescription.split(/\r\n|\r|\n/).length
+  const hasHiddenContent =
+    trimmedDescription.length > DESCRIPTION_PREVIEW_CHARACTER_LIMIT ||
+    lineCount > DESCRIPTION_PREVIEW_LINE_LIMIT ||
+    previewDescription !== trimmedDescription
 
   return (
     <div className="mt-3 max-w-3xl">
-      <p
-        id={descriptionId}
-        className={cn(
-          "text-sm leading-6 whitespace-pre-line wrap-anywhere text-muted-foreground",
-          shouldClamp &&
-            !isExpanded &&
-            "max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_72%,transparent_100%)]"
-        )}
-      >
-        {description}
-      </p>
+      <div className="relative min-h-16 overflow-hidden">
+        <p
+          id={descriptionId}
+          className={cn(
+            "text-sm leading-6 wrap-anywhere whitespace-pre-line text-muted-foreground",
+            hasHiddenContent &&
+              "max-h-24 overflow-hidden [mask-image:linear-gradient(to_bottom,black_78%,transparent_100%)]"
+          )}
+        >
+          {previewDescription}
+        </p>
+      </div>
 
-      {shouldClamp ? (
+      {hasHiddenContent ? (
         <button
           type="button"
           aria-controls={descriptionId}
-          aria-expanded={isExpanded}
-          onClick={() => setIsExpanded((currentValue) => !currentValue)}
+          onClick={() => setIsModalOpen(true)}
           className="mt-2 inline-flex rounded-md text-sm font-medium text-primary transition hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
         >
-          {isExpanded ? "Show less" : "Show more"}
+          Read full description
         </button>
+      ) : null}
+
+      {isModalOpen ? (
+        <DescriptionModal
+          description={trimmedDescription}
+          onClose={() => setIsModalOpen(false)}
+        />
       ) : null}
     </div>
   )
+}
+
+function getDescriptionPreview(description: string) {
+  const normalizedDescription = description
+    .replace(/\r\n|\r/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^[\s=_-]{8,}$/gm, "")
+    .replace(/[=_-]{8,}/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+
+  if (!normalizedDescription) {
+    return description.slice(0, DESCRIPTION_PREVIEW_CHARACTER_LIMIT).trim()
+  }
+
+  const lines = normalizedDescription.split("\n")
+  const previewLines = lines.slice(0, DESCRIPTION_PREVIEW_LINE_LIMIT)
+  let preview = previewLines.join("\n").trim()
+
+  if (preview.length <= DESCRIPTION_PREVIEW_CHARACTER_LIMIT) {
+    return preview
+  }
+
+  const truncatedPreview = preview.slice(0, DESCRIPTION_PREVIEW_CHARACTER_LIMIT)
+  const lastSpaceIndex = truncatedPreview.search(/\s+\S*$/)
+
+  preview =
+    lastSpaceIndex > DESCRIPTION_PREVIEW_CHARACTER_LIMIT * 0.7
+      ? truncatedPreview.slice(0, lastSpaceIndex)
+      : truncatedPreview
+
+  return `${preview.trimEnd()}...`
 }
 
 function EventImage({
@@ -236,6 +280,91 @@ function EventStatusChip({ status }: { status: EventDateStatus }) {
       />
       {config.label}
     </span>
+  )
+}
+
+function DescriptionModal({
+  description,
+  onClose,
+}: {
+  description: string
+  onClose: () => void
+}) {
+  const titleId = useId()
+  const descriptionId = useId()
+  const hasRtlContent = hasRtlText(description)
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-3 sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose()
+        }
+      }}
+    >
+      <div className="grid max-h-[88svh] w-full max-w-3xl min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border/80 bg-card shadow-2xl shadow-black/35">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 p-4">
+          <div className="min-w-0">
+            <h3
+              id={titleId}
+              className="truncate text-base font-semibold text-foreground"
+            >
+              Event description
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Full event details
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-raised text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+            aria-label="Close description"
+          >
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              strokeWidth={2}
+              className="size-4"
+            />
+          </button>
+        </div>
+
+        <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
+          <p
+            id={descriptionId}
+            dir={hasRtlContent ? "rtl" : "ltr"}
+            className={cn(
+              "text-sm leading-7 wrap-anywhere whitespace-pre-line text-muted-foreground",
+              hasRtlContent && "text-right"
+            )}
+          >
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
