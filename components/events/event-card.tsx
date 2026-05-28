@@ -8,6 +8,8 @@ import {
   Clock01Icon,
   Image01Icon,
   Location01Icon,
+  Wallet01Icon,
+  Wifi01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
@@ -239,6 +241,37 @@ function EventStatusChip({ status }: { status: EventDateStatus }) {
       />
       {config.label}
     </span>
+  )
+}
+
+function MetadataChip({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1",
+        className
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+function EventPriceChip({ event }: { event: EventFeedItem }) {
+  const label =
+    event.price_type === "paid" ? event.price_text?.trim() || "Paid" : "Free"
+
+  return (
+    <MetadataChip className="border-border/70 bg-surface-raised text-foreground">
+      <HugeiconsIcon icon={Wallet01Icon} strokeWidth={2} className="size-3.5" />
+      <span>{label}</span>
+    </MetadataChip>
   )
 }
 
@@ -627,6 +660,17 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                 </span>
               </span>
             </span>
+            <EventPriceChip event={event} />
+            {event.is_online ? (
+              <MetadataChip className="border-primary/25 bg-primary/10 text-primary dark:border-accent-warm/35 dark:bg-accent-warm/15 dark:text-accent-warm">
+                <HugeiconsIcon
+                  icon={Wifi01Icon}
+                  strokeWidth={2}
+                  className="size-3.5"
+                />
+                <span>Online</span>
+              </MetadataChip>
+            ) : null}
           </div>
 
           <div

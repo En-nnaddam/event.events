@@ -9,6 +9,7 @@ import {
   EventCtaSection,
   EventDateLocationSection,
   EventImagesSection,
+  EventPriceFormatSection,
   EventProgressPanel,
 } from "@/components/admin/event-form-sections"
 import { ErrorNotice, SubmitButton } from "@/components/layout/page-shell"
@@ -505,6 +506,8 @@ export function EventForm({
         minEventDate={minEventDate}
         startsAt={startsAt}
       />
+
+      <EventPriceFormatSection event={event} />
 
       <EventImagesSection
         existingCoverImages={existingCoverImages}

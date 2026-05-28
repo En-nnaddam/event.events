@@ -85,6 +85,10 @@ create table public.events (
   country_code text,
   location text,
 
+  price_type text not null default 'free',
+  price_text text,
+  is_online boolean not null default false,
+
   starts_at timestamptz not null,
   ends_at timestamptz,
 
@@ -108,6 +112,15 @@ create table public.events (
   constraint events_country_code_check check (
     country_code is null
     or country_code ~ '^[A-Z]{2}$'
+  ),
+
+  constraint events_price_type_check check (
+    price_type in ('free', 'paid')
+  ),
+
+  constraint events_price_text_check check (
+    price_type = 'paid'
+    or price_text is null
   ),
 
   constraint events_cta_external_link_check check (
@@ -336,6 +349,8 @@ create index events_country_code_idx on public.events(country_code);
 create index events_category_id_idx on public.events(category_id);
 create index events_starts_at_idx on public.events(starts_at);
 create index events_cta_type_idx on public.events(cta_type);
+create index events_price_type_idx on public.events(price_type);
+create index events_is_online_idx on public.events(is_online);
 
 create index news_slug_idx on public.news(slug);
 

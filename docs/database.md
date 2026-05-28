@@ -71,6 +71,18 @@ The relation uses `on delete restrict`, so a category cannot be deleted while ev
 
 A constraint ensures `ends_at` is not earlier than `starts_at` when it exists.
 
+### Event Price And Format
+
+Events store simple price and format metadata:
+
+```sql
+price_type text not null default 'free',
+price_text text,
+is_online boolean not null default false
+```
+
+`price_type` is either `free` or `paid`. `price_text` is free-form display copy for paid events, such as `150 MAD` or `From $20`; it stays null for free events. `is_online` only controls the public online badge and does not replace city, country, location, or CTA behavior.
+
 ### Event CTA
 
 Instead of separate `booking_url` and `contact_phone`, events use flexible CTA fields:
@@ -205,6 +217,10 @@ create table public.events (
   country_code text,
   location text,
 
+  price_type text not null default 'free',
+  price_text text,
+  is_online boolean not null default false,
+
   starts_at timestamptz not null,
   ends_at timestamptz,
 
@@ -228,6 +244,15 @@ create table public.events (
   constraint events_country_code_check check (
     country_code is null
     or country_code ~ '^[A-Z]{2}$'
+  ),
+
+  constraint events_price_type_check check (
+    price_type in ('free', 'paid')
+  ),
+
+  constraint events_price_text_check check (
+    price_type = 'paid'
+    or price_text is null
   ),
 
   constraint events_cta_external_link_check check (
@@ -456,6 +481,8 @@ create index events_country_code_idx on public.events(country_code);
 create index events_category_id_idx on public.events(category_id);
 create index events_starts_at_idx on public.events(starts_at);
 create index events_cta_type_idx on public.events(cta_type);
+create index events_price_type_idx on public.events(price_type);
+create index events_is_online_idx on public.events(is_online);
 
 create index news_slug_idx on public.news(slug);
 ```
@@ -524,6 +551,9 @@ description
 city
 country_code
 location
+price_type
+price_text
+is_online
 starts_at
 ends_at
 cover_image_url

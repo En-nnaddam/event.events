@@ -8,6 +8,7 @@ export const EVENT_CTA_TYPES = [
   "phone",
   "none",
 ] as const
+export const EVENT_PRICE_TYPES = ["free", "paid"] as const
 
 export const CATEGORY_OPTION_COLUMNS = "id,name"
 export const EVENT_FILTER_CATEGORY_COLUMNS = "id,name,slug"
@@ -18,6 +19,9 @@ export const ADMIN_EVENT_LIST_COLUMNS = `
   city,
   country_code,
   location,
+  price_type,
+  price_text,
+  is_online,
   starts_at,
   cover_image_url,
   status,
@@ -33,6 +37,9 @@ export const EVENT_FORM_COLUMNS = `
   city,
   country_code,
   location,
+  price_type,
+  price_text,
+  is_online,
   starts_at,
   ends_at,
   cover_image_url,
@@ -48,6 +55,9 @@ export const PUBLIC_EVENT_COLUMNS = `
   city,
   country_code,
   location,
+  price_type,
+  price_text,
+  is_online,
   starts_at,
   ends_at,
   cover_image_url,
@@ -62,6 +72,7 @@ export const PUBLIC_EVENT_COLUMNS = `
 
 export type EventStatus = "published" | "archived"
 export type EventCtaType = "external_link" | "whatsapp" | "phone" | "none"
+export type EventPriceType = "free" | "paid"
 
 const eventCtaLabels: Record<EventCtaType, string> = {
   external_link: "Book now",
@@ -88,6 +99,9 @@ export type EventFormEvent = {
   city: string
   country_code: string | null
   location: string | null
+  price_type: EventPriceType
+  price_text: string | null
+  is_online: boolean
   starts_at: string
   ends_at: string | null
   cover_image_url: string | null
@@ -104,6 +118,9 @@ export type AdminEventListItem = {
   city: string
   country_code: string | null
   location: string | null
+  price_type: EventPriceType
+  price_text: string | null
+  is_online: boolean
   starts_at: string
   cover_image_url: string | null
   status: EventStatus
@@ -129,6 +146,12 @@ export function getStatus(value: string): EventStatus | null {
 export function getCtaType(value: string): EventCtaType | null {
   return EVENT_CTA_TYPES.includes(value as EventCtaType)
     ? (value as EventCtaType)
+    : null
+}
+
+export function getPriceType(value: string): EventPriceType | null {
+  return EVENT_PRICE_TYPES.includes(value as EventPriceType)
+    ? (value as EventPriceType)
     : null
 }
 

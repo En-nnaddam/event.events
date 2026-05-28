@@ -8,6 +8,7 @@ import {
   formatDateTimeLocal,
   getCtaType,
   getEventCtaLabel,
+  getPriceType,
   getStatus,
   getStoragePathFromPublicUrl,
   isEventImageStoragePath,
@@ -15,6 +16,7 @@ import {
   slugify,
   slugifyId,
   type EventCtaType,
+  type EventPriceType,
 } from "@/lib/admin/events"
 import { revalidateEventConsumers } from "@/lib/admin/revalidation"
 import { isCountryCode, normalizeCountryCode } from "@/lib/country-data"
@@ -34,6 +36,9 @@ type EventPayloadDetails = {
   city: string
   country_code: string | null
   location: string | null
+  price_type: EventPriceType
+  price_text: string | null
+  is_online: boolean
   starts_at: string
   ends_at: string | null
   cta_type: EventCtaType
@@ -110,8 +115,16 @@ function parseEventPayloadDetails(
   const startsAtValue = getText(formData, "starts_at")
   const endsAtValue = getText(formData, "ends_at")
   const ctaType = getCtaType(getText(formData, "cta_type"))
+  const priceType = getPriceType(getText(formData, "price_type") || "free")
 
-  if (!title || !categoryId || !city || !startsAtValue || !ctaType) {
+  if (
+    !title ||
+    !categoryId ||
+    !city ||
+    !startsAtValue ||
+    !ctaType ||
+    !priceType
+  ) {
     return { error: "missing_fields" }
   }
 
@@ -175,6 +188,10 @@ function parseEventPayloadDetails(
     city,
     country_code: countryCode,
     location: getNullableText(formData, "location"),
+    price_type: priceType,
+    price_text:
+      priceType === "paid" ? getNullableText(formData, "price_text") : null,
+    is_online: formData.get("is_online") === "on",
     starts_at: startsAt.toISOString(),
     ends_at: endsAt ? endsAt.toISOString() : null,
     cta_type: ctaType,

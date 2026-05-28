@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { RefObject } from "react"
 
 import { DatePicker } from "@/components/admin/date-picker"
@@ -11,7 +12,11 @@ import { ImageSelector } from "@/components/admin/image-selector"
 import { Panel, PanelHeader } from "@/components/layout/page-shell"
 import { CountryCombobox } from "@/components/ui/country-combobox"
 import { Field, fieldControlClassName } from "@/components/ui/form-field"
-import type { CategoryOption, EventFormEvent } from "@/lib/admin/events"
+import type {
+  CategoryOption,
+  EventFormEvent,
+  EventPriceType,
+} from "@/lib/admin/events"
 
 type ExistingImage = {
   label: string
@@ -159,6 +164,64 @@ export function EventDateLocationSection({
           </Field>
         </div>
       </div>
+    </Panel>
+  )
+}
+
+export function EventPriceFormatSection({ event }: { event?: EventFormEvent }) {
+  const [priceType, setPriceType] = useState<EventPriceType>(
+    event?.price_type ?? "free"
+  )
+
+  return (
+    <Panel className="grid gap-4">
+      <PanelHeader
+        title="Price and format"
+        description="Show whether the event is free, paid, or available online."
+      />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Price">
+          <select
+            className={fieldControlClassName}
+            name="price_type"
+            value={priceType}
+            onChange={(event) =>
+              setPriceType(event.target.value as EventPriceType)
+            }
+          >
+            <option value="free">Free</option>
+            <option value="paid">Paid</option>
+          </select>
+        </Field>
+
+        {priceType === "paid" ? (
+          <Field label="Price text">
+            <input
+              className={fieldControlClassName}
+              name="price_text"
+              defaultValue={event?.price_text ?? ""}
+              placeholder="150 MAD"
+            />
+          </Field>
+        ) : null}
+      </div>
+
+      <label className="flex items-start gap-3 rounded-md border border-border/70 bg-surface-raised p-3 text-sm font-medium">
+        <input
+          type="checkbox"
+          name="is_online"
+          defaultChecked={event?.is_online ?? false}
+          className="mt-1 size-4 rounded border-border accent-primary"
+        />
+        <span className="grid gap-1">
+          <span>Online event</span>
+          <span className="text-xs leading-5 font-normal text-muted-foreground">
+            Show an online badge while keeping the existing city and location
+            details.
+          </span>
+        </span>
+      </label>
     </Panel>
   )
 }
