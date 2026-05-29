@@ -1,6 +1,7 @@
 export const EVENT_IMAGE_BUCKET = "event-images"
 export const MAX_EVENT_IMAGE_SIZE = 5 * 1024 * 1024
-export const PUBLIC_EVENTS_PAGE_SIZE = 6
+export const PUBLIC_EVENTS_INITIAL_PAGE_SIZE = 3
+export const PUBLIC_EVENTS_NEXT_PAGE_SIZE = 2
 export const EVENT_STATUS_OPTIONS = ["published", "archived"] as const
 export const EVENT_CTA_TYPES = [
   "external_link",

@@ -11,7 +11,8 @@ import {
 } from "@/hooks/use-infinite-query"
 import {
   PUBLIC_EVENT_COLUMNS,
-  PUBLIC_EVENTS_PAGE_SIZE,
+  PUBLIC_EVENTS_INITIAL_PAGE_SIZE,
+  PUBLIC_EVENTS_NEXT_PAGE_SIZE,
 } from "@/lib/admin/events"
 import {
   getEventFilters,
@@ -150,7 +151,8 @@ export function EventsInfiniteList({
   } = useInfiniteQuery<EventFeedItem>({
     tableName: "events",
     columns: PUBLIC_EVENT_COLUMNS,
-    pageSize: PUBLIC_EVENTS_PAGE_SIZE,
+    initialPageSize: PUBLIC_EVENTS_INITIAL_PAGE_SIZE,
+    nextPageSize: PUBLIC_EVENTS_NEXT_PAGE_SIZE,
     queryKey,
     trailingQuery: onlyPublishedEvents,
   })

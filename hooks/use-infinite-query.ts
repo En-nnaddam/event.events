@@ -41,6 +41,8 @@ type SupabaseQueryHandler = (query: SupabaseSelectQuery) => SupabaseSelectQuery
 type UseInfiniteQueryProps = {
   tableName: SupabaseTableName
   columns?: string
+  initialPageSize?: number
+  nextPageSize?: number
   pageSize?: number
   trailingQuery?: SupabaseQueryHandler
   queryKey?: string
@@ -94,7 +96,13 @@ function mergeUniqueRows<TData>(currentRows: TData[], nextRows: TData[]) {
 }
 
 function createStore<TData>(props: UseInfiniteQueryProps) {
-  const { tableName, columns = "*", pageSize = 20, trailingQuery } = props
+  const {
+    tableName,
+    columns = "*",
+    initialPageSize = props.pageSize ?? 20,
+    nextPageSize = props.pageSize ?? initialPageSize,
+    trailingQuery,
+  } = props
 
   let state: StoreState<TData> = {
     data: [],
@@ -135,11 +143,12 @@ function createStore<TData>(props: UseInfiniteQueryProps) {
       query = trailingQuery(query)
     }
 
+    const rangeSize = state.hasInitialFetch ? nextPageSize : initialPageSize
     const {
       data: rows,
       count,
       error,
-    } = await query.range(skip, skip + pageSize - 1)
+    } = await query.range(skip, skip + rangeSize - 1)
 
     if (error) {
       setState({ error, isFetching: false })
@@ -181,17 +190,35 @@ function createStore<TData>(props: UseInfiniteQueryProps) {
 }
 
 export function useInfiniteQuery<TData>(props: UseInfiniteQueryProps) {
-  const { columns, pageSize, queryKey, tableName, trailingQuery } = props
+  const {
+    columns,
+    initialPageSize,
+    nextPageSize,
+    pageSize,
+    queryKey,
+    tableName,
+    trailingQuery,
+  } = props
   const store = useMemo(
     () =>
       createStore<TData>({
         columns,
+        initialPageSize,
+        nextPageSize,
         pageSize,
         queryKey,
         tableName,
         trailingQuery,
       }),
-    [columns, pageSize, queryKey, tableName, trailingQuery]
+    [
+      columns,
+      initialPageSize,
+      nextPageSize,
+      pageSize,
+      queryKey,
+      tableName,
+      trailingQuery,
+    ]
   )
 
   const state = useSyncExternalStore(
