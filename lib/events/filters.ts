@@ -167,9 +167,7 @@ export function normalizeCustomDateRange({
   return {
     fromDate: validFromDate,
     toDate:
-      validFromDate &&
-      validToDate &&
-      !isAfterDateValue(validToDate, validFromDate)
+      validFromDate && validToDate && validToDate < validFromDate
         ? ""
         : validToDate,
   }

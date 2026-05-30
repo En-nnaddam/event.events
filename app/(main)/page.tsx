@@ -1,63 +1,44 @@
-import { Suspense } from "react"
+import Image from "next/image"
 
-import { EventsFilterBar } from "@/components/events/events-filter-bar"
-import { EventsHero } from "@/components/events/events-hero"
-import { EventsInfiniteList } from "@/components/events/events-infinite-list"
-import { getEventFilterCategories } from "@/lib/admin/event-queries"
-import { createClient } from "@/lib/supabase/server"
+import { HomeDiscoveryForm } from "@/components/events/home-discovery-form"
 
-function EventsFeedSkeleton() {
+export default function Page() {
   return (
-    <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
-      <div className="rounded-lg border border-border bg-card p-4 shadow-sm lg:sticky lg:top-6 lg:self-start">
-        <div className="h-6 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="mt-4 grid gap-3">
-          <div className="h-11 animate-pulse rounded-md bg-muted" />
-          <div className="h-11 animate-pulse rounded-md bg-muted" />
-          <div className="h-11 animate-pulse rounded-md bg-muted" />
-        </div>
-      </div>
-      <div className="grid min-w-0 gap-5">
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
-      </div>
-    </div>
-  )
-}
+    <main className="min-h-[calc(100svh-4rem)] bg-background">
+      <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden border-b border-border/80">
+        <Image
+          src="/event-discovery-hero-themed.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div
+          className="absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/0.76)_0%,rgb(0_0_0/0.58)_43%,rgb(0_0_0/0.22)_72%,rgb(0_0_0/0.14)_100%)]"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-[linear-gradient(0deg,rgb(0_0_0/0.38)_0%,transparent_38%)]"
+          aria-hidden="true"
+        />
 
-export default async function Page() {
-  const supabase = await createClient()
-  const categories = await getEventFilterCategories(supabase)
-
-  return (
-    <main className="min-h-svh bg-background">
-      <EventsHero />
-
-      <section
-        id="events"
-        className="mx-auto max-w-6xl px-5 py-10 sm:px-6 lg:px-8"
-      >
-        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Latest published events
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-6xl items-center px-5 py-14 sm:px-6 lg:px-8">
+          <div className="max-w-4xl pt-4">
+            <p className="inline-flex rounded-md border border-white/18 bg-white/10 px-3 py-1.5 text-sm font-medium text-white shadow-sm backdrop-blur">
+              Events worth leaving the house for
             </p>
-            <h2 className="mt-1 text-3xl font-semibold tracking-normal">
-              Events feed
-            </h2>
-          </div>
-          <p className="max-w-md text-sm leading-6 text-muted-foreground">
-            Each event opens right here with dates, place, images, contact
-            details, and action links.
-          </p>
-        </div>
+            <h1 className="mt-5 max-w-3xl text-4xl leading-[1.04] font-semibold tracking-normal text-balance text-white sm:text-5xl sm:leading-[1.02] lg:text-6xl">
+              Find what is happening next, wherever you are.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
+              Search events by interest, city, country, or date. Start broad,
+              then refine the feed when you are ready.
+            </p>
 
-        <Suspense fallback={<EventsFeedSkeleton />}>
-          <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
-            <EventsFilterBar categories={categories} />
-            <EventsInfiniteList categories={categories} />
+            <HomeDiscoveryForm />
           </div>
-        </Suspense>
+        </div>
       </section>
     </main>
   )

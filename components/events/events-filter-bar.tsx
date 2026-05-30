@@ -18,7 +18,6 @@ import {
   getDateFilterLabel,
   getEventFilters,
   getFormatFilterLabel,
-  getNextDateValue,
   getPriceFilterLabel,
   getTodayDateValue,
   hasEventFilters,
@@ -242,7 +241,7 @@ function DateRangeFields({
   const todayValue = getTodayDateValue()
   const minimumToDate =
     draftFromDate && !isPastDateValue(draftFromDate)
-      ? getNextDateValue(draftFromDate)
+      ? draftFromDate
       : todayValue
   const hasPastDate = Boolean(
     (draftFromDate && isPastDateValue(draftFromDate)) ||
@@ -251,12 +250,12 @@ function DateRangeFields({
   const hasInvalidOrder = Boolean(
     draftFromDate &&
     draftToDate &&
-    !isAfterDateValue(draftToDate, draftFromDate)
+    isAfterDateValue(draftFromDate, draftToDate)
   )
   const validationMessage = hasPastDate
     ? "Choose today or a future date."
     : hasInvalidOrder
-      ? "To date must be after From date."
+      ? "To date must be on or after From date."
       : ""
   const canApply = hasChanges && !validationMessage
 
