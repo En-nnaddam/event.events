@@ -103,6 +103,78 @@ export function normalizeDateValue(value: string | null | undefined) {
   return `${year}-${month}-${day}` === dateValue ? dateValue : ""
 }
 
+export function formatLocalDateValue(date: Date) {
+  const year = String(date.getFullYear()).padStart(4, "0")
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
+export function getTodayDateValue(now = new Date()) {
+  return formatLocalDateValue(now)
+}
+
+export function getNextDateValue(value: string) {
+  const dateValue = normalizeDateValue(value)
+
+  if (!dateValue) {
+    return ""
+  }
+
+  const date = new Date(`${dateValue}T00:00:00`)
+  date.setDate(date.getDate() + 1)
+
+  return formatLocalDateValue(date)
+}
+
+export function isPastDateValue(
+  value: string,
+  todayValue = getTodayDateValue()
+) {
+  const dateValue = normalizeDateValue(value)
+
+  return Boolean(dateValue && dateValue < todayValue)
+}
+
+export function isAfterDateValue(value: string, comparisonValue: string) {
+  const dateValue = normalizeDateValue(value)
+  const comparisonDateValue = normalizeDateValue(comparisonValue)
+
+  return Boolean(
+    dateValue && comparisonDateValue && dateValue > comparisonDateValue
+  )
+}
+
+export function normalizeCustomDateRange({
+  fromDate,
+  todayValue = getTodayDateValue(),
+  toDate,
+}: {
+  fromDate: string | null | undefined
+  todayValue?: string
+  toDate: string | null | undefined
+}) {
+  const nextFromDate = normalizeDateValue(fromDate)
+  const nextToDate = normalizeDateValue(toDate)
+  const validFromDate =
+    nextFromDate && !isPastDateValue(nextFromDate, todayValue)
+      ? nextFromDate
+      : ""
+  const validToDate =
+    nextToDate && !isPastDateValue(nextToDate, todayValue) ? nextToDate : ""
+
+  return {
+    fromDate: validFromDate,
+    toDate:
+      validFromDate &&
+      validToDate &&
+      !isAfterDateValue(validToDate, validFromDate)
+        ? ""
+        : validToDate,
+  }
+}
+
 export function getEventFilters({
   categories,
   categorySlug,
@@ -127,17 +199,26 @@ export function getEventFilters({
   toDate: string | null | undefined
 }): EventFilters {
   const filterDate = getFilterDate(date)
+  const customDateRange =
+    filterDate === "custom"
+      ? normalizeCustomDateRange({ fromDate, toDate })
+      : { fromDate: "", toDate: "" }
+  const customDate =
+    filterDate === "custom" &&
+    (customDateRange.fromDate || customDateRange.toDate)
+      ? "custom"
+      : null
 
   return {
     category: getFilterCategory(categories, categorySlug),
     city: normalizeCityFilter(city),
     countryCode: getFilterCountryCode(countryCode),
-    date: filterDate,
+    date: filterDate === "custom" ? customDate : filterDate,
     format: getFilterFormat(format),
-    fromDate: filterDate === "custom" ? normalizeDateValue(fromDate) : "",
+    fromDate: customDate ? customDateRange.fromDate : "",
     price: getFilterPrice(price),
     query: normalizeFilterQuery(query),
-    toDate: filterDate === "custom" ? normalizeDateValue(toDate) : "",
+    toDate: customDate ? customDateRange.toDate : "",
   }
 }
 

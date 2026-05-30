@@ -14,11 +14,16 @@ import { EventSearchInput } from "@/components/events/event-search-input"
 import { CountryCombobox } from "@/components/ui/country-combobox"
 import { CountryFlag, getCountryOption } from "@/lib/countries"
 import {
+  formatLocalDateValue,
   getDateFilterLabel,
   getEventFilters,
   getFormatFilterLabel,
+  getNextDateValue,
   getPriceFilterLabel,
+  getTodayDateValue,
   hasEventFilters,
+  isAfterDateValue,
+  isPastDateValue,
   type EventDateFilter,
   type EventFilterCategory,
   type EventFormatFilter,
@@ -144,14 +149,6 @@ function buildSearchUrl({
   return `${pathname}${queryString ? `?${queryString}` : ""}#events`
 }
 
-function formatLocalDateValue(date: Date) {
-  const year = String(date.getFullYear()).padStart(4, "0")
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-
-  return `${year}-${month}-${day}`
-}
-
 function getQuickDateInputValues(date: EventDateFilter | "") {
   const today = new Date()
   const todayValue = formatLocalDateValue(today)
@@ -203,7 +200,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onRemove}
-      className="inline-flex min-h-8 min-w-0 max-w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
+      className="inline-flex min-h-8 max-w-full min-w-0 items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
     >
       <span className="min-w-0 truncate">{children}</span>
       <HugeiconsIcon
@@ -242,6 +239,26 @@ function DateRangeFields({
   const [draftFromDate, setDraftFromDate] = useState(fromDate)
   const [draftToDate, setDraftToDate] = useState(toDate)
   const hasChanges = draftFromDate !== fromDate || draftToDate !== toDate
+  const todayValue = getTodayDateValue()
+  const minimumToDate =
+    draftFromDate && !isPastDateValue(draftFromDate)
+      ? getNextDateValue(draftFromDate)
+      : todayValue
+  const hasPastDate = Boolean(
+    (draftFromDate && isPastDateValue(draftFromDate)) ||
+    (draftToDate && isPastDateValue(draftToDate))
+  )
+  const hasInvalidOrder = Boolean(
+    draftFromDate &&
+    draftToDate &&
+    !isAfterDateValue(draftToDate, draftFromDate)
+  )
+  const validationMessage = hasPastDate
+    ? "Choose today or a future date."
+    : hasInvalidOrder
+      ? "To date must be after From date."
+      : ""
+  const canApply = hasChanges && !validationMessage
 
   return (
     <div className="grid min-w-0 gap-3">
@@ -249,6 +266,7 @@ function DateRangeFields({
         <span>From</span>
         <input
           className={`${controlClassName} min-w-0`}
+          min={todayValue}
           onInput={(event) => setDraftFromDate(event.currentTarget.value)}
           type="date"
           value={draftFromDate}
@@ -259,16 +277,23 @@ function DateRangeFields({
         <span>To</span>
         <input
           className={`${controlClassName} min-w-0`}
+          min={minimumToDate}
           onInput={(event) => setDraftToDate(event.currentTarget.value)}
           type="date"
           value={draftToDate}
         />
       </label>
 
+      {validationMessage ? (
+        <p className="text-sm leading-5 text-destructive">
+          {validationMessage}
+        </p>
+      ) : null}
+
       <button
         type="button"
         className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
-        disabled={!hasChanges}
+        disabled={!canApply}
         onClick={() =>
           onApply({ fromDate: draftFromDate, toDate: draftToDate })
         }

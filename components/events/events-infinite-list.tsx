@@ -145,10 +145,7 @@ function getEventDateRange(filters: EventFilters, now = new Date()) {
     : null
 
   if (from && to && from > to) {
-    return {
-      from: getStartOfLocalDay(to),
-      to: getEndOfLocalDay(from),
-    }
+    return null
   }
 
   return from || to ? { from, to } : null
@@ -320,7 +317,7 @@ export function EventsInfiniteList({
             {count} {count === 1 ? "event" : "events"}
             {activeFilters ? " found" : " published"}
           </p>
-          <p className="min-w-0 max-w-xl break-words text-sm text-muted-foreground sm:text-right">
+          <p className="max-w-xl min-w-0 text-sm break-words text-muted-foreground sm:text-right">
             {filterLabel}
           </p>
         </div>
