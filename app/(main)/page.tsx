@@ -8,17 +8,19 @@ import { createClient } from "@/lib/supabase/server"
 
 function EventsFeedSkeleton() {
   return (
-    <div className="grid gap-5">
-      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm lg:sticky lg:top-6 lg:self-start">
         <div className="h-6 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <div className="mt-4 grid gap-3">
           <div className="h-11 animate-pulse rounded-md bg-muted" />
           <div className="h-11 animate-pulse rounded-md bg-muted" />
           <div className="h-11 animate-pulse rounded-md bg-muted" />
         </div>
       </div>
-      <div className="h-64 animate-pulse rounded-lg bg-muted" />
-      <div className="h-64 animate-pulse rounded-lg bg-muted" />
+      <div className="grid gap-5">
+        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+      </div>
     </div>
   )
 }
@@ -51,8 +53,10 @@ export default async function Page() {
         </div>
 
         <Suspense fallback={<EventsFeedSkeleton />}>
-          <EventsFilterBar categories={categories} />
-          <EventsInfiniteList categories={categories} />
+          <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
+            <EventsFilterBar categories={categories} />
+            <EventsInfiniteList categories={categories} />
+          </div>
         </Suspense>
       </section>
     </main>

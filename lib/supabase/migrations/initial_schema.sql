@@ -338,21 +338,13 @@ with check (public.is_admin());
 -- INDEXES
 -- =========================================
 
-create index profiles_role_idx on public.profiles(role);
-
-create index categories_slug_idx on public.categories(slug);
-
-create index events_slug_idx on public.events(slug);
-create index events_status_idx on public.events(status);
+create index events_status_starts_at_idx on public.events(status, starts_at);
 create index events_city_idx on public.events(city);
 create index events_country_code_idx on public.events(country_code);
 create index events_category_id_idx on public.events(category_id);
 create index events_starts_at_idx on public.events(starts_at);
-create index events_cta_type_idx on public.events(cta_type);
 create index events_price_type_idx on public.events(price_type);
 create index events_is_online_idx on public.events(is_online);
-
-create index news_slug_idx on public.news(slug);
 
 
 -- =========================================

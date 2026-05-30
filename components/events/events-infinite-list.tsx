@@ -19,6 +19,7 @@ import {
   getFilterLabel,
   hasEventFilters,
   type EventFilterCategory,
+  type EventFilters,
 } from "@/lib/events/filters"
 import type { EventFeedItem } from "@/lib/events/types"
 
@@ -80,6 +81,83 @@ function getSearchPattern(query: string) {
     .trim()
 }
 
+function getEndOfLocalDay(date: Date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999
+  )
+}
+
+function getStartOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function getEventDateRange(filters: EventFilters, now = new Date()) {
+  if (!filters.date) {
+    return null
+  }
+
+  const todayStart = getStartOfLocalDay(now)
+
+  if (filters.date === "today") {
+    return {
+      from: todayStart,
+      to: getEndOfLocalDay(todayStart),
+    }
+  }
+
+  if (filters.date === "week") {
+    const weekEnd = getEndOfLocalDay(todayStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+
+    return {
+      from: todayStart,
+      to: weekEnd,
+    }
+  }
+
+  if (filters.date === "month") {
+    return {
+      from: todayStart,
+      to: getEndOfLocalDay(
+        new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0)
+      ),
+    }
+  }
+
+  if (filters.date === "upcoming") {
+    return {
+      from: todayStart,
+      to: null,
+    }
+  }
+
+  const from = filters.fromDate
+    ? getStartOfLocalDay(new Date(`${filters.fromDate}T00:00:00`))
+    : null
+  const to = filters.toDate
+    ? getEndOfLocalDay(new Date(`${filters.toDate}T00:00:00`))
+    : null
+
+  if (from && to && from > to) {
+    return {
+      from: getStartOfLocalDay(to),
+      to: getEndOfLocalDay(from),
+    }
+  }
+
+  return from || to ? { from, to } : null
+}
+
+function getIsoDateValue(date: Date) {
+  return date.toISOString()
+}
+
 export function EventsInfiniteList({
   categories,
 }: {
@@ -92,8 +170,14 @@ export function EventsInfiniteList({
       getEventFilters({
         categories,
         categorySlug: searchParams.get("category"),
+        city: searchParams.get("city"),
         countryCode: searchParams.get("country"),
+        date: searchParams.get("date"),
+        format: searchParams.get("format"),
+        fromDate: searchParams.get("from"),
+        price: searchParams.get("price"),
         query: searchParams.get("q"),
+        toDate: searchParams.get("to"),
       }),
     [categories, searchParams]
   )
@@ -104,6 +188,12 @@ export function EventsInfiniteList({
     filters.query,
     filters.category?.id ?? "all-categories",
     filters.countryCode ?? "all-countries",
+    filters.city || "all-cities",
+    filters.date ?? "all-dates",
+    filters.fromDate || "no-from",
+    filters.toDate || "no-to",
+    filters.price ?? "all-prices",
+    filters.format ?? "all-formats",
   ].join(":")
 
   const onlyPublishedEvents = useCallback<SupabaseQueryHandler>(
@@ -118,6 +208,38 @@ export function EventsInfiniteList({
 
       if (filters.countryCode) {
         nextQuery = nextQuery.eq("country_code", filters.countryCode)
+      }
+
+      if (filters.city) {
+        nextQuery = nextQuery.ilike(
+          "city",
+          `%${getSearchPattern(filters.city)}%`
+        )
+      }
+
+      if (filters.price) {
+        nextQuery = nextQuery.eq("price_type", filters.price)
+      }
+
+      if (filters.format === "online") {
+        nextQuery = nextQuery.eq("is_online", true)
+      }
+
+      if (filters.format === "in_place") {
+        nextQuery = nextQuery.eq("is_online", false)
+      }
+
+      const dateRange = getEventDateRange(filters)
+
+      if (dateRange?.to) {
+        nextQuery = nextQuery.lte("starts_at", getIsoDateValue(dateRange.to))
+      }
+
+      if (dateRange?.from) {
+        const fromDate = getIsoDateValue(dateRange.from)
+        nextQuery = nextQuery.or(
+          `ends_at.gte.${fromDate},and(ends_at.is.null,starts_at.gte.${fromDate})`
+        )
       }
 
       const searchPattern = getSearchPattern(filters.query)
@@ -136,7 +258,7 @@ export function EventsInfiniteList({
 
       return nextQuery
     },
-    [filters.category, filters.countryCode, filters.query]
+    [filters]
   )
 
   const {
