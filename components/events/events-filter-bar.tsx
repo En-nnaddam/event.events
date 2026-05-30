@@ -45,6 +45,14 @@ type FilterUrlValues = {
 const controlClassName =
   "h-11 w-full rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/30"
 
+const quickDateOptions = [
+  { label: "All", value: "" },
+  { label: "Today", value: "today" },
+  { label: "This week", value: "week" },
+  { label: "This month", value: "month" },
+  { label: "Upcoming", value: "upcoming" },
+] satisfies Array<{ label: string; value: EventDateFilter | "" }>
+
 function getActiveFilterCount({
   filters,
   activeCountry,
@@ -435,25 +443,32 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
         </FilterSection>
 
         <FilterSection title="Date">
-          <label className="grid gap-2 text-sm font-medium text-foreground">
+          <div className="grid gap-2 text-sm font-medium text-foreground">
             <span>Quick date</span>
-            <select
-              className={controlClassName}
-              onChange={(event) =>
-                replaceFilters({
-                  date: event.target.value as EventDateFilter | "",
-                })
-              }
-              value={date}
-            >
-              <option value="">All dates</option>
-              <option value="today">Today</option>
-              <option value="week">This week</option>
-              <option value="month">This month</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="custom">Custom range</option>
-            </select>
-          </label>
+            <div className="flex flex-wrap gap-2" role="radiogroup">
+              {quickDateOptions.map((option) => {
+                const isActive = date === option.value
+
+                return (
+                  <button
+                    key={option.value || "all"}
+                    type="button"
+                    aria-checked={isActive}
+                    className={cn(
+                      "inline-flex min-h-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none",
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-foreground hover:bg-muted"
+                    )}
+                    onClick={() => replaceFilters({ date: option.value })}
+                    role="radio"
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           <div className="grid gap-3">
             <label className="grid gap-2 text-sm font-medium text-foreground">
@@ -644,7 +659,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
         </div>
       ) : null}
 
-      <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
+      <aside className="hidden lg:sticky lg:top-6 lg:block lg:max-h-[calc(100svh-3rem)] lg:self-start lg:overflow-y-auto">
         {renderPanel()}
       </aside>
     </>
