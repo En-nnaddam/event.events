@@ -455,11 +455,11 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
             </select>
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3">
             <label className="grid gap-2 text-sm font-medium text-foreground">
               <span>From</span>
               <input
-                className={controlClassName}
+                className={`${controlClassName} min-w-0`}
                 onInput={(event) => updateFromDate(event.currentTarget.value)}
                 type="date"
                 value={fromDate}
@@ -469,7 +469,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
             <label className="grid gap-2 text-sm font-medium text-foreground">
               <span>To</span>
               <input
-                className={controlClassName}
+                className={`${controlClassName} min-w-0`}
                 onInput={(event) => updateToDate(event.currentTarget.value)}
                 type="date"
                 value={toDate}
