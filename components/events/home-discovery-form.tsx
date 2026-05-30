@@ -27,7 +27,6 @@ function getDiscoverUrl({ date, query }: { date: string; query: string }) {
   if (dateValue) {
     params.set("date", "custom")
     params.set("from", dateValue)
-    params.set("to", dateValue)
   }
 
   const queryString = params.toString()
