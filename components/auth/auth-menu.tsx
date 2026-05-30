@@ -45,11 +45,6 @@ export function AuthMenu({ currentAuth, children }: AuthMenuProps) {
           fullName={currentAuth.fullName}
           isAdmin={isAdmin}
         />
-        {isAdmin ? (
-          <span className="rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0.5 text-[10px] leading-none font-semibold text-primary uppercase">
-            Admin
-          </span>
-        ) : null}
         <HugeiconsIcon
           icon={ArrowDown01Icon}
           strokeWidth={2}
