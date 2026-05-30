@@ -144,6 +144,54 @@ function buildSearchUrl({
   return `${pathname}${queryString ? `?${queryString}` : ""}#events`
 }
 
+function formatLocalDateValue(date: Date) {
+  const year = String(date.getFullYear()).padStart(4, "0")
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
+function getQuickDateInputValues(date: EventDateFilter | "") {
+  const today = new Date()
+  const todayValue = formatLocalDateValue(today)
+
+  if (date === "today") {
+    return {
+      fromDate: todayValue,
+      toDate: todayValue,
+    }
+  }
+
+  if (date === "week") {
+    const weekEnd = new Date(today)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+
+    return {
+      fromDate: todayValue,
+      toDate: formatLocalDateValue(weekEnd),
+    }
+  }
+
+  if (date === "month") {
+    return {
+      fromDate: todayValue,
+      toDate: formatLocalDateValue(
+        new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      ),
+    }
+  }
+
+  if (date === "upcoming") {
+    return {
+      fromDate: todayValue,
+      toDate: "",
+    }
+  }
+
+  return null
+}
+
 function FilterChip({
   children,
   onRemove,
@@ -155,7 +203,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onRemove}
-      className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
+      className="inline-flex min-h-8 min-w-0 max-w-full items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1 text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
     >
       <span className="min-w-0 truncate">{children}</span>
       <HugeiconsIcon
@@ -175,9 +223,58 @@ function FilterSection({
   title: string
 }) {
   return (
-    <div className="grid gap-3 border-t border-border pt-4 first:border-t-0 first:pt-0">
+    <div className="grid min-w-0 gap-3 border-t border-border pt-4 first:border-t-0 first:pt-0">
       <h4 className="text-sm font-semibold tracking-normal">{title}</h4>
       {children}
+    </div>
+  )
+}
+
+function DateRangeFields({
+  fromDate,
+  onApply,
+  toDate,
+}: {
+  fromDate: string
+  onApply: (range: { fromDate: string; toDate: string }) => void
+  toDate: string
+}) {
+  const [draftFromDate, setDraftFromDate] = useState(fromDate)
+  const [draftToDate, setDraftToDate] = useState(toDate)
+  const hasChanges = draftFromDate !== fromDate || draftToDate !== toDate
+
+  return (
+    <div className="grid min-w-0 gap-3">
+      <label className="grid gap-2 text-sm font-medium text-foreground">
+        <span>From</span>
+        <input
+          className={`${controlClassName} min-w-0`}
+          onInput={(event) => setDraftFromDate(event.currentTarget.value)}
+          type="date"
+          value={draftFromDate}
+        />
+      </label>
+
+      <label className="grid gap-2 text-sm font-medium text-foreground">
+        <span>To</span>
+        <input
+          className={`${controlClassName} min-w-0`}
+          onInput={(event) => setDraftToDate(event.currentTarget.value)}
+          type="date"
+          value={draftToDate}
+        />
+      </label>
+
+      <button
+        type="button"
+        className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+        disabled={!hasChanges}
+        onClick={() =>
+          onApply({ fromDate: draftFromDate, toDate: draftToDate })
+        }
+      >
+        Apply dates
+      </button>
     </div>
   )
 }
@@ -216,6 +313,9 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
   const price = filters.price ?? ""
   const format = filters.format ?? ""
   const toDate = filters.toDate
+  const quickDateInputValues = getQuickDateInputValues(date)
+  const visibleFromDate = quickDateInputValues?.fromDate ?? fromDate
+  const visibleToDate = quickDateInputValues?.toDate ?? toDate
   const filterValuesRef = useRef<FilterUrlValues>({
     categorySlug,
     city,
@@ -319,7 +419,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
     }
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="flex w-full min-w-0 flex-wrap gap-2">
         {filters.query ? (
           <FilterChip onRemove={() => replaceFilters({ query: "" })}>
             Search: {filters.query}
@@ -376,16 +476,16 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
   }
 
   function renderFilterControls() {
-    function updateFromDate(value: string) {
-      replaceFilters({ fromDate: value })
-    }
-
-    function updateToDate(value: string) {
-      replaceFilters({ toDate: value })
+    function applyDateRange(range: { fromDate: string; toDate: string }) {
+      replaceFilters({
+        date: range.fromDate || range.toDate ? "custom" : "",
+        fromDate: range.fromDate,
+        toDate: range.toDate,
+      })
     }
 
     return (
-      <div className="grid gap-5">
+      <div className="grid min-w-0 gap-5">
         <FilterSection title="Find">
           <label className="grid gap-2 text-sm font-medium text-foreground">
             <span>Search</span>
@@ -445,7 +545,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
         <FilterSection title="Date">
           <div className="grid gap-2 text-sm font-medium text-foreground">
             <span>Quick date</span>
-            <div className="flex flex-wrap gap-2" role="radiogroup">
+            <div className="flex min-w-0 flex-wrap gap-2" role="radiogroup">
               {quickDateOptions.map((option) => {
                 const isActive = date === option.value
 
@@ -470,27 +570,12 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
             </div>
           </div>
 
-          <div className="grid gap-3">
-            <label className="grid gap-2 text-sm font-medium text-foreground">
-              <span>From</span>
-              <input
-                className={`${controlClassName} min-w-0`}
-                onInput={(event) => updateFromDate(event.currentTarget.value)}
-                type="date"
-                value={fromDate}
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm font-medium text-foreground">
-              <span>To</span>
-              <input
-                className={`${controlClassName} min-w-0`}
-                onInput={(event) => updateToDate(event.currentTarget.value)}
-                type="date"
-                value={toDate}
-              />
-            </label>
-          </div>
+          <DateRangeFields
+            key={`${visibleFromDate}-${visibleToDate}`}
+            fromDate={visibleFromDate}
+            onApply={applyDateRange}
+            toDate={visibleToDate}
+          />
         </FilterSection>
 
         <FilterSection title="Access">
@@ -542,7 +627,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
     return (
       <div
         className={cn(
-          "grid gap-5 rounded-lg border border-border bg-card p-4 shadow-sm",
+          "grid min-w-0 gap-5 rounded-lg border border-border bg-card p-4 shadow-sm",
           className
         )}
       >
@@ -583,11 +668,11 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
 
   return (
     <>
-      <div className="mb-5 grid gap-3 lg:hidden">
+      <div className="mb-5 grid w-full min-w-0 gap-3 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold shadow-sm transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
+          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold shadow-sm transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
         >
           <HugeiconsIcon
             icon={FilterHorizontalIcon}

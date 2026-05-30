@@ -64,12 +64,12 @@ function FeedStatus({
   description: string
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card px-5 py-10 text-center shadow-sm">
+    <div className="min-w-0 rounded-lg border border-border bg-card px-5 py-10 text-center shadow-sm">
       <h3 className="text-lg font-semibold tracking-normal">{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
       </p>
-      {action ? <div className="mt-5">{action}</div> : null}
+      {action ? <div className="mt-5 min-w-0">{action}</div> : null}
     </div>
   )
 }
@@ -313,14 +313,14 @@ export function EventsInfiniteList({
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid min-w-0 gap-5">
       {isSuccess ? (
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-medium text-foreground">
+        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 text-sm font-medium text-foreground">
             {count} {count === 1 ? "event" : "events"}
             {activeFilters ? " found" : " published"}
           </p>
-          <p className="max-w-xl text-sm text-muted-foreground">
+          <p className="min-w-0 max-w-xl break-words text-sm text-muted-foreground sm:text-right">
             {filterLabel}
           </p>
         </div>

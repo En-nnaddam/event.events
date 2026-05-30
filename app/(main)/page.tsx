@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server"
 
 function EventsFeedSkeleton() {
   return (
-    <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
       <div className="rounded-lg border border-border bg-card p-4 shadow-sm lg:sticky lg:top-6 lg:self-start">
         <div className="h-6 w-40 animate-pulse rounded-md bg-muted" />
         <div className="mt-4 grid gap-3">
@@ -17,7 +17,7 @@ function EventsFeedSkeleton() {
           <div className="h-11 animate-pulse rounded-md bg-muted" />
         </div>
       </div>
-      <div className="grid gap-5">
+      <div className="grid min-w-0 gap-5">
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
       </div>
@@ -53,7 +53,7 @@ export default async function Page() {
         </div>
 
         <Suspense fallback={<EventsFeedSkeleton />}>
-          <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
             <EventsFilterBar categories={categories} />
             <EventsInfiniteList categories={categories} />
           </div>
