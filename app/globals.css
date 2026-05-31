@@ -143,3 +143,45 @@
     }
 }
 
+@layer components {
+  .popular-category-marquee {
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      black 2rem,
+      black calc(100% - 2rem),
+      transparent
+    );
+  }
+
+  .popular-category-ticker {
+    animation: popular-category-ticker 70s linear infinite;
+    will-change: transform;
+  }
+
+  .popular-category-ticker:hover {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popular-category-marquee {
+    mask-image: none;
+  }
+
+  .popular-category-ticker {
+    animation: none;
+    transform: none;
+  }
+}
+
+@keyframes popular-category-ticker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+

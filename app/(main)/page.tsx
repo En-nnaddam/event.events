@@ -1,8 +1,14 @@
 import Image from "next/image"
 
 import { HomeDiscoveryForm } from "@/components/events/home-discovery-form"
+import { PopularCategoriesSection } from "@/components/events/popular-categories-section"
+import { getCategoriesWithEventCounts } from "@/lib/admin/categories"
+import { createClient } from "@/lib/supabase/server"
 
-export default function Page() {
+export default async function Page() {
+  const supabase = await createClient()
+  const categories = await getCategoriesWithEventCounts(supabase)
+
   return (
     <main className="min-h-[calc(100svh-4rem)] bg-background">
       <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden border-b border-border/80">
@@ -40,6 +46,7 @@ export default function Page() {
           </div>
         </div>
       </section>
+      <PopularCategoriesSection categories={categories} />
     </main>
   )
 }
