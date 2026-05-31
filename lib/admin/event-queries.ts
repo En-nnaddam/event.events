@@ -5,6 +5,7 @@ import {
   CATEGORY_OPTION_COLUMNS,
   EVENT_FORM_COLUMNS,
   EVENT_FILTER_CATEGORY_COLUMNS,
+  PUBLIC_EVENT_COLUMNS,
   type AdminEventListItem,
   type AdminRecentEvent,
   type CategoryOption,
@@ -12,6 +13,7 @@ import {
   type EventStatus,
 } from "@/lib/admin/events"
 import type { EventFilterCategory } from "@/lib/events/filters"
+import type { EventFeedItem } from "@/lib/events/types"
 
 export async function getCategoryOptions(supabase: SupabaseClient) {
   const { data } = await supabase
@@ -29,6 +31,24 @@ export async function getEventFilterCategories(supabase: SupabaseClient) {
     .select(EVENT_FILTER_CATEGORY_COLUMNS)
     .order("name", { ascending: true })
     .returns<EventFilterCategory[]>()
+
+  return data ?? []
+}
+
+export async function getUpcomingPublishedEvents(
+  supabase: SupabaseClient,
+  limit = 4,
+  now = new Date()
+) {
+  const nowIso = now.toISOString()
+  const { data } = await supabase
+    .from("events")
+    .select(PUBLIC_EVENT_COLUMNS)
+    .eq("status", "published")
+    .or(`ends_at.gte.${nowIso},and(ends_at.is.null,starts_at.gte.${nowIso})`)
+    .order("starts_at", { ascending: true })
+    .limit(limit)
+    .returns<EventFeedItem[]>()
 
   return data ?? []
 }

@@ -2,12 +2,17 @@ import Image from "next/image"
 
 import { HomeDiscoveryForm } from "@/components/events/home-discovery-form"
 import { PopularCategoriesSection } from "@/components/events/popular-categories-section"
+import { UpcomingEventsSection } from "@/components/events/upcoming-events-section"
 import { getCategoriesWithEventCounts } from "@/lib/admin/categories"
+import { getUpcomingPublishedEvents } from "@/lib/admin/event-queries"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function Page() {
   const supabase = await createClient()
-  const categories = await getCategoriesWithEventCounts(supabase)
+  const [categories, upcomingEvents] = await Promise.all([
+    getCategoriesWithEventCounts(supabase),
+    getUpcomingPublishedEvents(supabase),
+  ])
 
   return (
     <main className="min-h-[calc(100svh-4rem)] bg-background">
@@ -47,6 +52,7 @@ export default async function Page() {
         </div>
       </section>
       <PopularCategoriesSection categories={categories} />
+      <UpcomingEventsSection events={upcomingEvents} />
     </main>
   )
 }
