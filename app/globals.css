@@ -144,44 +144,18 @@
 }
 
 @layer components {
-  .popular-category-marquee {
+  .popular-category-scroll {
     mask-image: linear-gradient(
       90deg,
       transparent,
-      black 2rem,
-      black calc(100% - 2rem),
+      black 1rem,
+      black calc(100% - 1rem),
       transparent
     );
+    scrollbar-width: none;
   }
 
-  .popular-category-ticker {
-    animation: popular-category-ticker 70s linear infinite;
-    will-change: transform;
-  }
-
-  .popular-category-ticker:hover {
-    animation-play-state: paused;
+  .popular-category-scroll::-webkit-scrollbar {
+    display: none;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .popular-category-marquee {
-    mask-image: none;
-  }
-
-  .popular-category-ticker {
-    animation: none;
-    transform: none;
-  }
-}
-
-@keyframes popular-category-ticker {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
-}
-
