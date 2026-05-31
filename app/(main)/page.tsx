@@ -3,6 +3,7 @@ import Image from "next/image"
 import { HomeDiscoveryForm } from "@/components/events/home-discovery-form"
 import { PopularCategoriesSection } from "@/components/events/popular-categories-section"
 import { UpcomingEventsSection } from "@/components/events/upcoming-events-section"
+import { Footer } from "@/components/layout/footer"
 import { getCategoriesWithEventCounts } from "@/lib/admin/categories"
 import { getUpcomingPublishedEvents } from "@/lib/admin/event-queries"
 import { createClient } from "@/lib/supabase/server"
@@ -53,6 +54,7 @@ export default async function Page() {
       </section>
       <PopularCategoriesSection categories={categories} />
       <UpcomingEventsSection events={upcomingEvents} />
+      <Footer />
     </main>
   )
 }
