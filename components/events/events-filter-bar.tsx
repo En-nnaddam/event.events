@@ -248,9 +248,7 @@ function DateRangeFields({
     (draftToDate && isPastDateValue(draftToDate))
   )
   const hasInvalidOrder = Boolean(
-    draftFromDate &&
-    draftToDate &&
-    isAfterDateValue(draftFromDate, draftToDate)
+    draftFromDate && draftToDate && isAfterDateValue(draftFromDate, draftToDate)
   )
   const validationMessage = hasPastDate
     ? "Choose today or a future date."
@@ -651,7 +649,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
     return (
       <div
         className={cn(
-          "grid min-w-0 gap-4 rounded-lg border border-border bg-card p-3.5 shadow-sm",
+          "grid min-w-0 gap-4 rounded-lg border border-border/70 bg-card/90 p-3.5 shadow-lg shadow-black/5",
           className
         )}
       >
@@ -696,7 +694,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold shadow-sm transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
+          className="inline-flex h-11 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-border/70 bg-card/90 px-4 text-sm font-semibold shadow-sm shadow-black/5 transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
         >
           <HugeiconsIcon
             icon={FilterHorizontalIcon}

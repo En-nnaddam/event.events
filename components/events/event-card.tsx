@@ -135,11 +135,22 @@ function EventImage({
     return (
       <div
         className={cn(
-          "flex min-h-64 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
+          "relative flex min-h-64 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border/80 bg-surface-raised text-sm font-semibold text-muted-foreground",
           className
         )}
       >
-        Event image
+        <div
+          className="absolute inset-0 bg-[radial-gradient(circle_at_top,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_42%)]"
+          aria-hidden="true"
+        />
+        <span className="relative inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 ring-1 ring-border/70 backdrop-blur">
+          <HugeiconsIcon
+            icon={Image01Icon}
+            strokeWidth={2}
+            className="size-4"
+          />
+          Event image coming soon
+        </span>
       </div>
     )
   }
@@ -149,7 +160,7 @@ function EventImage({
       type="button"
       onClick={onOpen}
       className={cn(
-        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left ring-1 ring-border/60 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left ring-1 ring-border/60 transition duration-200 hover:ring-primary/25 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
       aria-label={`Open ${title}`}
@@ -159,7 +170,7 @@ function EventImage({
         alt=""
         fill
         sizes={sizes}
-        className="scale-105 object-cover opacity-30 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-25"
+        className="scale-110 object-cover opacity-25 blur-2xl transition duration-300 group-hover:scale-[1.15] dark:opacity-20"
         aria-hidden="true"
       />
       <Image
@@ -167,7 +178,7 @@ function EventImage({
         alt={alt}
         fill
         sizes={sizes}
-        className="object-contain transition duration-200 group-hover:scale-[1.02]"
+        className="object-contain transition duration-300 group-hover:scale-[1.015]"
       />
     </button>
   )
@@ -175,7 +186,7 @@ function EventImage({
 
 function DetailIcon({ icon }: { icon: typeof Calendar01Icon }) {
   return (
-    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-background text-primary ring-1 ring-border/70 dark:text-accent-warm">
+    <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-background text-primary shadow-sm ring-1 ring-border/70 dark:text-accent-warm">
       <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
     </span>
   )
@@ -236,7 +247,7 @@ function EventStatusChip({ status }: { status: EventDateStatus }) {
       )}
     >
       <span
-        className="size-1.5 rounded-full bg-current opacity-70"
+        className="size-1.5 rounded-full bg-current opacity-75"
         aria-hidden="true"
       />
       {config.label}
@@ -254,7 +265,7 @@ function MetadataChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
+        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 py-1",
         className
       )}
     >
@@ -626,30 +637,30 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   }
 
   return (
-    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card/95 p-4 shadow-lg shadow-black/10 lg:grid-cols-[minmax(18rem,0.42fr)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,0.46fr)_minmax(0,1fr)]">
+    <article className="group/card grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/70 bg-card/95 p-3 shadow-xl ring-1 shadow-black/5 ring-transparent transition duration-200 hover:border-primary/20 hover:shadow-2xl hover:shadow-black/10 lg:grid-cols-[minmax(18rem,0.44fr)_minmax(0,1fr)] lg:p-4 xl:grid-cols-[minmax(20rem,0.46fr)_minmax(0,1fr)]">
       <div className="grid min-w-0 gap-3">
         <EventImage
           alt={`${event.title} cover image`}
           src={event.cover_image_url}
           title={`${event.title} cover image`}
-          sizes="(max-width: 1024px) calc(100vw - 2rem), (max-width: 1280px) 38vw, 28vw"
-          className="aspect-[4/3] min-h-64 md:min-h-72 lg:min-h-80 xl:min-h-72"
+          sizes="(max-width: 1024px) calc(100vw - 2rem), (max-width: 1280px) 40vw, 30vw"
+          className="aspect-[16/11] min-h-64 md:min-h-80 lg:min-h-full"
           onOpen={
             event.cover_image_url ? () => setActiveImageIndex(0) : undefined
           }
         />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-5 lg:min-h-full lg:justify-between">
-        <div className="grid min-w-0 gap-4">
+      <div className="flex min-w-0 flex-col gap-5 p-1 lg:min-h-full lg:justify-between lg:py-2 lg:pr-2">
+        <div className="grid min-w-0 gap-5">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
             {event.categories?.name ? (
-              <span className="rounded-full border border-accent-warm/20 bg-accent px-2.5 py-1 text-accent-foreground">
+              <span className="inline-flex min-h-7 items-center rounded-full border border-accent-warm/25 bg-accent px-2.5 py-1 text-accent-foreground shadow-sm">
                 {event.categories.name}
               </span>
             ) : null}
             <EventStatusChip status={dateStatus} />
-            <span className="rounded-full border border-border/60 bg-secondary/80 px-2.5 py-1 text-secondary-foreground">
+            <span className="inline-flex min-h-7 items-center rounded-full border border-border/60 bg-secondary/80 px-2.5 py-1 text-secondary-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <CountryFlag
                   code={event.country_code}
@@ -686,7 +697,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           </div>
 
           <dl className="grid gap-3 text-sm md:grid-cols-2">
-            <div className="flex gap-3 rounded-md bg-surface-raised/70 p-3 ring-1 ring-border/60">
+            <div className="flex gap-3 rounded-md bg-surface-raised/65 p-3.5 ring-1 ring-border/60">
               <DetailIcon icon={Calendar01Icon} />
               <div className="grid min-w-0 gap-3">
                 <DateLine label="Starts at" value={event.starts_at} />
@@ -696,7 +707,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               </div>
             </div>
 
-            <div className="flex gap-3 rounded-md bg-surface-raised/70 p-3 ring-1 ring-border/60">
+            <div className="flex gap-3 rounded-md bg-surface-raised/65 p-3.5 ring-1 ring-border/60">
               <DetailIcon icon={Location01Icon} />
               <div className="min-w-0">
                 <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
@@ -738,7 +749,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                     ? "noreferrer"
                     : undefined
                 }
-                className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="inline-flex min-h-11 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 {cta.label}
               </a>
@@ -748,7 +759,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               <button
                 type="button"
                 onClick={() => setActiveImageIndex(0)}
-                className="inline-flex min-h-10 max-w-full items-center justify-center gap-2 rounded-md border border-border/70 bg-transparent px-4 py-2 text-center text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="inline-flex min-h-11 max-w-full items-center justify-center gap-2 rounded-md border border-border/70 bg-background/70 px-4 py-2 text-center text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 <HugeiconsIcon
                   icon={Image01Icon}

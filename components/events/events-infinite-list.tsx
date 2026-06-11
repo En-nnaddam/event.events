@@ -25,25 +25,27 @@ import type { EventFeedItem } from "@/lib/events/types"
 
 function EventSkeleton() {
   return (
-    <div className="grid gap-5 rounded-lg border border-border bg-card p-4 shadow-sm lg:grid-cols-[minmax(18rem,0.42fr)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,0.46fr)_minmax(0,1fr)]">
+    <div className="grid gap-5 rounded-lg border border-border/70 bg-card/95 p-3 shadow-xl shadow-black/5 lg:grid-cols-[minmax(18rem,0.44fr)_minmax(0,1fr)] lg:p-4 xl:grid-cols-[minmax(20rem,0.46fr)_minmax(0,1fr)]">
       <div className="grid gap-3">
-        <div className="aspect-[4/3] min-h-64 animate-pulse rounded-lg bg-muted md:min-h-72 lg:min-h-80 xl:min-h-72" />
+        <div className="aspect-[16/11] min-h-64 animate-pulse rounded-lg bg-muted md:min-h-80 lg:min-h-full" />
       </div>
-      <div className="grid gap-4">
-        <div className="flex gap-2">
-          <div className="h-6 w-24 animate-pulse rounded-md bg-muted" />
-          <div className="h-6 w-20 animate-pulse rounded-md bg-muted" />
+      <div className="grid gap-5 p-1 lg:py-2 lg:pr-2">
+        <div className="flex flex-wrap gap-2">
+          <div className="h-7 w-24 animate-pulse rounded-full bg-muted" />
+          <div className="h-7 w-20 animate-pulse rounded-full bg-muted" />
+          <div className="h-7 w-32 animate-pulse rounded-full bg-muted" />
         </div>
-        <div className="h-8 w-2/3 animate-pulse rounded-md bg-muted" />
+        <div className="h-9 w-2/3 animate-pulse rounded-md bg-muted" />
         <div className="grid gap-2">
           <div className="h-4 w-full animate-pulse rounded-md bg-muted" />
           <div className="h-4 w-11/12 animate-pulse rounded-md bg-muted" />
           <div className="h-4 w-3/4 animate-pulse rounded-md bg-muted" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="h-24 animate-pulse rounded-md bg-muted" />
-          <div className="h-24 animate-pulse rounded-md bg-muted" />
+          <div className="h-28 animate-pulse rounded-md bg-muted" />
+          <div className="h-28 animate-pulse rounded-md bg-muted" />
         </div>
+        <div className="h-11 w-40 animate-pulse rounded-md bg-muted" />
       </div>
     </div>
   )
@@ -59,8 +61,11 @@ function FeedStatus({
   description: string
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-border bg-card px-5 py-10 text-center shadow-sm">
-      <h3 className="text-lg font-semibold tracking-normal">{title}</h3>
+    <div className="min-w-0 rounded-lg border border-border/70 bg-card/95 px-5 py-12 text-center shadow-xl shadow-black/5">
+      <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-surface-raised text-primary ring-1 ring-border/60">
+        <span className="size-2 rounded-full bg-current" aria-hidden="true" />
+      </div>
+      <h3 className="text-xl font-semibold tracking-normal">{title}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
       </p>
@@ -307,7 +312,7 @@ export function EventsInfiniteList({
   return (
     <div className="grid min-w-0 gap-5">
       {isSuccess ? (
-        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border/60 bg-card/70 px-4 py-3 shadow-sm shadow-black/5 sm:flex-row sm:items-center sm:justify-between">
           <p className="min-w-0 text-sm font-medium text-foreground">
             {count} {count === 1 ? "event" : "events"}
             {activeFilters ? " found" : " published"}
@@ -324,7 +329,7 @@ export function EventsInfiniteList({
             activeFilters ? (
               <Link
                 href="/discover#events"
-                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 Clear filters
               </Link>
@@ -358,7 +363,7 @@ export function EventsInfiniteList({
       <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
 
       {!hasMore && data.length > 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
+        <p className="rounded-lg border border-border/60 bg-card/60 py-4 text-center text-sm text-muted-foreground shadow-sm shadow-black/5">
           You have reached the end.
         </p>
       ) : null}
