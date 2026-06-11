@@ -25,14 +25,9 @@ import type { EventFeedItem } from "@/lib/events/types"
 
 function EventSkeleton() {
   return (
-    <div className="grid gap-5 rounded-lg border border-border bg-card p-4 shadow-sm lg:grid-cols-[minmax(300px,0.55fr)_1fr] lg:p-5">
+    <div className="grid gap-5 rounded-lg border border-border bg-card p-4 shadow-sm lg:grid-cols-[minmax(18rem,0.42fr)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,0.46fr)_minmax(0,1fr)]">
       <div className="grid gap-3">
-        <div className="min-h-72 animate-pulse rounded-lg bg-muted md:min-h-80 lg:min-h-96" />
-        <div className="flex gap-3 overflow-hidden">
-          <div className="size-24 shrink-0 animate-pulse rounded-md bg-muted sm:size-28" />
-          <div className="size-24 shrink-0 animate-pulse rounded-md bg-muted sm:size-28" />
-          <div className="size-24 shrink-0 animate-pulse rounded-md bg-muted sm:size-28" />
-        </div>
+        <div className="aspect-[4/3] min-h-64 animate-pulse rounded-lg bg-muted md:min-h-72 lg:min-h-80 xl:min-h-72" />
       </div>
       <div className="grid gap-4">
         <div className="flex gap-2">
@@ -46,8 +41,8 @@ function EventSkeleton() {
           <div className="h-4 w-3/4 animate-pulse rounded-md bg-muted" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="h-28 animate-pulse rounded-md bg-muted" />
-          <div className="h-28 animate-pulse rounded-md bg-muted" />
+          <div className="h-24 animate-pulse rounded-md bg-muted" />
+          <div className="h-24 animate-pulse rounded-md bg-muted" />
         </div>
       </div>
     </div>

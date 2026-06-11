@@ -13,7 +13,7 @@ export async function Header() {
 
   return (
     <header className="border-b border-border/80 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:flex-row sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-16 max-w-[92rem] items-center justify-between gap-3 px-5 py-3 sm:flex-row sm:px-6 lg:px-8">
         <Link
           href="/"
           className="rounded-md focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"

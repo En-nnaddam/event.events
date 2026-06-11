@@ -32,8 +32,8 @@ type EventImageItem = {
   title: string
 }
 
-const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 280
-const DESCRIPTION_PREVIEW_LINE_LIMIT = 4
+const DESCRIPTION_PREVIEW_CHARACTER_LIMIT = 220
+const DESCRIPTION_PREVIEW_LINE_LIMIT = 3
 
 function EventDescription({ description }: { description: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -48,13 +48,13 @@ function EventDescription({ description }: { description: string }) {
 
   return (
     <div className="mt-3 max-w-3xl">
-      <div className="relative min-h-16 overflow-hidden">
+      <div className="relative min-h-12 overflow-hidden">
         <p
           id={descriptionId}
           className={cn(
-            "text-sm leading-6 wrap-anywhere whitespace-pre-line text-muted-foreground",
+            "text-sm leading-6 wrap-anywhere whitespace-pre-line text-muted-foreground md:text-[15px]",
             hasHiddenContent &&
-              "max-h-24 overflow-hidden [mask-image:linear-gradient(to_bottom,black_78%,transparent_100%)]"
+              "max-h-[4.5rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_78%,transparent_100%)]"
           )}
         >
           {previewDescription}
@@ -66,7 +66,7 @@ function EventDescription({ description }: { description: string }) {
           type="button"
           aria-controls={descriptionId}
           onClick={() => setIsModalOpen(true)}
-          className="mt-2 inline-flex rounded-md text-sm font-medium text-primary transition hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+          className="mt-2 inline-flex rounded-md text-sm font-semibold text-primary transition hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
         >
           Read full description
         </button>
@@ -135,7 +135,7 @@ function EventImage({
     return (
       <div
         className={cn(
-          "flex min-h-72 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
+          "flex min-h-64 items-center justify-center rounded-lg border border-border/80 bg-surface-raised text-sm font-medium text-muted-foreground",
           className
         )}
       >
@@ -149,7 +149,7 @@ function EventImage({
       type="button"
       onClick={onOpen}
       className={cn(
-        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
+        "group relative block w-full min-w-0 overflow-hidden rounded-lg bg-surface-raised text-left ring-1 ring-border/60 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none",
         className
       )}
       aria-label={`Open ${title}`}
@@ -159,7 +159,7 @@ function EventImage({
         alt=""
         fill
         sizes={sizes}
-        className="scale-105 object-cover opacity-35 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-30"
+        className="scale-105 object-cover opacity-30 blur-xl transition duration-200 group-hover:scale-110 dark:opacity-25"
         aria-hidden="true"
       />
       <Image
@@ -175,7 +175,7 @@ function EventImage({
 
 function DetailIcon({ icon }: { icon: typeof Calendar01Icon }) {
   return (
-    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/70 text-primary dark:text-accent-warm">
+    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-background text-primary ring-1 ring-border/70 dark:text-accent-warm">
       <HugeiconsIcon icon={icon} strokeWidth={2} className="size-4" />
     </span>
   )
@@ -185,13 +185,13 @@ function DateLine({ label, value }: { label: string; value: string }) {
   const dateTime = formatEventDateTime(value)
 
   return (
-    <div className="grid gap-0.5">
+    <div className="grid gap-1">
       <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
         {label}
       </dt>
       <dd className="leading-5 wrap-anywhere">
         <span className="font-medium text-foreground">{dateTime.date}</span>
-        <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
+        <span className="mt-0.5 flex items-center gap-1 text-muted-foreground sm:mt-0 sm:inline-flex">
           <HugeiconsIcon
             icon={Clock01Icon}
             strokeWidth={2}
@@ -231,7 +231,7 @@ function EventStatusChip({ status }: { status: EventDateStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
         config.className
       )}
     >
@@ -254,7 +254,7 @@ function MetadataChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
         className
       )}
     >
@@ -268,7 +268,7 @@ function EventPriceChip({ event }: { event: EventFeedItem }) {
     event.price_type === "paid" ? event.price_text?.trim() || "Paid" : "Free"
 
   return (
-    <MetadataChip className="border-border/70 bg-surface-raised text-foreground">
+    <MetadataChip className="border-border/60 bg-surface-raised/80 text-foreground">
       <HugeiconsIcon icon={Wallet01Icon} strokeWidth={2} className="size-3.5" />
       <span>{label}</span>
     </MetadataChip>
@@ -626,14 +626,14 @@ export function EventCard({ event }: { event: EventFeedItem }) {
   }
 
   return (
-    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card p-4 shadow-lg shadow-black/15 lg:grid-cols-[minmax(300px,0.55fr)_1fr] lg:p-5">
+    <article className="grid w-full min-w-0 gap-5 overflow-hidden rounded-lg border border-border/80 bg-card/95 p-4 shadow-lg shadow-black/10 lg:grid-cols-[minmax(18rem,0.42fr)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,0.46fr)_minmax(0,1fr)]">
       <div className="grid min-w-0 gap-3">
         <EventImage
           alt={`${event.title} cover image`}
           src={event.cover_image_url}
           title={`${event.title} cover image`}
-          sizes="(max-width: 1024px) calc(100vw - 2rem), 42vw"
-          className="aspect-square min-h-72 md:min-h-80 lg:min-h-96"
+          sizes="(max-width: 1024px) calc(100vw - 2rem), (max-width: 1280px) 38vw, 28vw"
+          className="aspect-[4/3] min-h-64 md:min-h-72 lg:min-h-80 xl:min-h-72"
           onOpen={
             event.cover_image_url ? () => setActiveImageIndex(0) : undefined
           }
@@ -642,14 +642,14 @@ export function EventCard({ event }: { event: EventFeedItem }) {
 
       <div className="flex min-w-0 flex-col gap-5 lg:min-h-full lg:justify-between">
         <div className="grid min-w-0 gap-4">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-normal text-muted-foreground uppercase">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
             {event.categories?.name ? (
-              <span className="rounded-md border border-accent-warm/20 bg-accent px-2 py-1 text-accent-foreground">
+              <span className="rounded-full border border-accent-warm/20 bg-accent px-2.5 py-1 text-accent-foreground">
                 {event.categories.name}
               </span>
             ) : null}
             <EventStatusChip status={dateStatus} />
-            <span className="rounded-md border border-border/70 bg-secondary px-2 py-1 text-secondary-foreground">
+            <span className="rounded-full border border-border/60 bg-secondary/80 px-2.5 py-1 text-secondary-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <CountryFlag
                   code={event.country_code}
@@ -677,7 +677,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
             dir={hasRtlContent ? "rtl" : "ltr"}
             className={cn("min-w-0", hasRtlContent && "text-right")}
           >
-            <h2 className="text-2xl leading-tight font-semibold tracking-normal text-foreground">
+            <h2 className="max-w-3xl text-2xl leading-tight font-semibold tracking-normal text-foreground md:text-[1.65rem]">
               {event.title}
             </h2>
             {event.description ? (
@@ -686,7 +686,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
           </div>
 
           <dl className="grid gap-3 text-sm md:grid-cols-2">
-            <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+            <div className="flex gap-3 rounded-md bg-surface-raised/70 p-3 ring-1 ring-border/60">
               <DetailIcon icon={Calendar01Icon} />
               <div className="grid min-w-0 gap-3">
                 <DateLine label="Starts at" value={event.starts_at} />
@@ -696,7 +696,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               </div>
             </div>
 
-            <div className="flex gap-3 rounded-md border border-border/70 bg-surface-raised p-3.5">
+            <div className="flex gap-3 rounded-md bg-surface-raised/70 p-3 ring-1 ring-border/60">
               <DetailIcon icon={Location01Icon} />
               <div className="min-w-0">
                 <dt className="text-[11px] font-semibold tracking-normal text-muted-foreground uppercase">
@@ -722,7 +722,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
         </div>
 
         {cta || hasImages ? (
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-3 border-t border-border/60 pt-4">
             {cta ? (
               <a
                 href={cta.href}
@@ -738,7 +738,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
                     ? "noreferrer"
                     : undefined
                 }
-                className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="inline-flex min-h-10 max-w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 {cta.label}
               </a>
@@ -748,7 +748,7 @@ export function EventCard({ event }: { event: EventFeedItem }) {
               <button
                 type="button"
                 onClick={() => setActiveImageIndex(0)}
-                className="inline-flex min-h-10 max-w-full items-center justify-center gap-2 rounded-md border border-border/80 bg-surface-raised px-4 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+                className="inline-flex min-h-10 max-w-full items-center justify-center gap-2 rounded-md border border-border/70 bg-transparent px-4 py-2 text-center text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
               >
                 <HugeiconsIcon
                   icon={Image01Icon}

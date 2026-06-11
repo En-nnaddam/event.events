@@ -651,7 +651,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
     return (
       <div
         className={cn(
-          "grid min-w-0 gap-5 rounded-lg border border-border bg-card p-4 shadow-sm",
+          "grid min-w-0 gap-4 rounded-lg border border-border bg-card p-3.5 shadow-sm",
           className
         )}
       >
@@ -692,7 +692,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
 
   return (
     <>
-      <div className="mb-5 grid w-full min-w-0 gap-3 lg:hidden">
+      <div className="mb-5 grid w-full min-w-0 gap-3 xl:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -714,7 +714,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
       </div>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal>
+        <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal>
           <button
             type="button"
             className="absolute inset-0 bg-foreground/35"
@@ -768,7 +768,7 @@ export function EventsFilterBar({ categories }: EventsFilterBarProps) {
         </div>
       ) : null}
 
-      <aside className="hidden lg:sticky lg:top-6 lg:block lg:max-h-[calc(100svh-3rem)] lg:self-start lg:overflow-y-auto">
+      <aside className="hidden xl:sticky xl:top-6 xl:block xl:max-h-[calc(100svh-3rem)] xl:self-start xl:overflow-y-auto">
         {renderPanel()}
       </aside>
     </>
