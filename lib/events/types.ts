@@ -2,6 +2,7 @@ import type { EventCtaType, EventPriceType } from "@/lib/admin/events"
 
 export type EventFeedItem = {
   id: string
+  slug: string
   title: string
   description: string | null
   city: string

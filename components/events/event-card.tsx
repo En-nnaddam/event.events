@@ -13,6 +13,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
+import Link from "next/link"
 import { useCallback, useEffect, useId, useMemo, useState } from "react"
 
 import { CountryFlag, getCountryOption } from "@/lib/countries"
@@ -588,7 +589,14 @@ function ImageModal({
   )
 }
 
-export function EventCard({ event }: { event: EventFeedItem }) {
+export function EventCard({
+  event,
+  titleHeadingLevel = "h2",
+}: {
+  event: EventFeedItem
+  titleHeadingLevel?: "h1" | "h2"
+}) {
+  const TitleHeading = titleHeadingLevel
   const cta = getEventCta(event)
   const country = getCountryOption(event.country_code)
   const eventLocation = [event.city, country?.name].filter(Boolean).join(", ")
@@ -688,9 +696,14 @@ export function EventCard({ event }: { event: EventFeedItem }) {
             dir={hasRtlContent ? "rtl" : "ltr"}
             className={cn("min-w-0", hasRtlContent && "text-right")}
           >
-            <h2 className="max-w-3xl text-2xl leading-tight font-semibold tracking-normal text-foreground md:text-[1.65rem]">
-              {event.title}
-            </h2>
+            <TitleHeading className="max-w-3xl text-2xl leading-tight font-semibold tracking-normal text-foreground md:text-[1.65rem]">
+              <Link
+                href={`/event/${event.slug}`}
+                className="rounded-sm transition hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
+              >
+                {event.title}
+              </Link>
+            </TitleHeading>
             {event.description ? (
               <EventDescription description={event.description} />
             ) : null}

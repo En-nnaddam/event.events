@@ -53,6 +53,20 @@ export async function getUpcomingPublishedEvents(
   return data ?? []
 }
 
+export async function getPublishedEventBySlug(
+  supabase: SupabaseClient,
+  slug: string
+) {
+  const { data } = await supabase
+    .from("events")
+    .select(PUBLIC_EVENT_COLUMNS)
+    .eq("status", "published")
+    .eq("slug", slug)
+    .maybeSingle<EventFeedItem>()
+
+  return data
+}
+
 export async function getEventForForm(
   supabase: SupabaseClient,
   eventId: string

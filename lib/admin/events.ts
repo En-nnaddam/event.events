@@ -51,6 +51,7 @@ export const EVENT_FORM_COLUMNS = `
 `
 export const PUBLIC_EVENT_COLUMNS = `
   id,
+  slug,
   title,
   description,
   city,

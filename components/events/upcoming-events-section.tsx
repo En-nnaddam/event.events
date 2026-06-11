@@ -145,10 +145,10 @@ export function UpcomingEventsSection({ events }: UpcomingEventsSectionProps) {
                       </a>
                     ) : null}
                     <Link
-                      href="/discover#events"
+                      href={`/event/${event.slug}`}
                       className="inline-flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md border border-border/80 bg-surface-raised px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
                     >
-                      <span>Discover</span>
+                      <span>Details</span>
                       <HugeiconsIcon
                         icon={ArrowRight01Icon}
                         strokeWidth={2}
