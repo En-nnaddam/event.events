@@ -16,19 +16,18 @@ import { ErrorNotice, SubmitButton } from "@/components/layout/page-shell"
 import { buttonVariants } from "@/components/ui/button"
 import { useEventDateRange } from "@/hooks/use-event-date-range"
 import {
-  buildEventCoverImagePath,
-  buildEventGalleryImagePath,
   EVENT_IMAGE_BUCKET,
   type CategoryOption,
   type EventFormEvent,
 } from "@/lib/admin/events"
-import { formatImageSize, optimizeImage } from "@/lib/images/optimize"
-import {
-  removePublicFiles,
-  uploadPublicFile,
-  type UploadedPublicFile,
-} from "@/lib/supabase/storage-client"
+import { removePublicFiles } from "@/lib/supabase/storage-client"
 import { cn } from "@/lib/utils"
+
+import {
+  getOptimizationSummary,
+  optimizeEventImages,
+  uploadEventImages,
+} from "./event-image-workflow"
 
 type EventActionResult = {
   eventId?: string
@@ -89,10 +88,6 @@ const progressLabels: Record<ProgressStage, string> = {
   saving: "Saving event...",
   uploading: "Uploading images...",
   validating: "Validating form...",
-}
-
-function getImageExtension(file: File) {
-  return file.type === "image/webp" ? "webp" : "jpg"
 }
 
 function getTodayStart() {
@@ -183,90 +178,26 @@ export function EventForm({
     }
   }
 
-  async function optimizeFiles(files: File[]) {
-    const optimizedFiles: File[] = []
-    let originalTotal = 0
-    let optimizedTotal = 0
+  async function optimizeSelectedImages() {
+    const coverFileCount = coverFiles.length
+    const result = await optimizeEventImages(
+      [...coverFiles, ...galleryFiles],
+      (file) => setProgressDetail(`Optimizing ${file.name}`)
+    )
+    const summary = getOptimizationSummary({
+      optimizedTotal: result.optimizedTotal,
+      originalTotal: result.originalTotal,
+      totalFiles: result.files.length,
+    })
 
-    for (const file of files) {
-      setProgressDetail(`Optimizing ${file.name}`)
-      const optimized = await optimizeImage(file)
-      optimizedFiles.push(optimized.file)
-      originalTotal += optimized.originalSize
-      optimizedTotal += optimized.optimizedSize
+    if (summary) {
+      setOptimizationSummary(summary)
     }
 
-    if (optimizedFiles.length > 0) {
-      setOptimizationSummary(
-        `Optimized ${optimizedFiles.length} image${optimizedFiles.length === 1 ? "" : "s"} from ${formatImageSize(
-          originalTotal
-        )} to ${formatImageSize(optimizedTotal)}.`
-      )
+    return {
+      optimizedCoverFiles: result.files.slice(0, coverFileCount),
+      optimizedGalleryFiles: result.files.slice(coverFileCount),
     }
-
-    return optimizedFiles
-  }
-
-  async function uploadImages({
-    cover,
-    eventId,
-    gallery,
-  }: {
-    cover: File[]
-    eventId: string
-    gallery: File[]
-  }) {
-    const uploadedPaths: string[] = []
-    let uploadedCover: UploadedPublicFile | null = null
-    const uploadedGallery: UploadedPublicFile[] = []
-
-    if (cover[0]) {
-      setProgressDetail("Uploading cover image")
-      try {
-        uploadedCover = await uploadPublicFile({
-          bucket: EVENT_IMAGE_BUCKET,
-          file: cover[0],
-          path: buildEventCoverImagePath(eventId, getImageExtension(cover[0])),
-        })
-        uploadedPaths.push(uploadedCover.path)
-      } catch (error) {
-        return {
-          error: error instanceof Error ? error.message : "upload_failed",
-          uploadedCover,
-          uploadedGallery,
-          uploadedPaths,
-        }
-      }
-    }
-
-    for (const [index, file] of gallery.entries()) {
-      setProgressDetail(
-        `Uploading gallery image ${index + 1} of ${gallery.length}`
-      )
-      try {
-        const uploaded = await uploadPublicFile({
-          bucket: EVENT_IMAGE_BUCKET,
-          file,
-          path: buildEventGalleryImagePath({
-            eventId,
-            extension: getImageExtension(file),
-            fileName: file.name,
-            index: index + 1,
-          }),
-        })
-        uploadedGallery.push(uploaded)
-        uploadedPaths.push(uploaded.path)
-      } catch (error) {
-        return {
-          error: error instanceof Error ? error.message : "upload_failed",
-          uploadedCover,
-          uploadedGallery,
-          uploadedPaths,
-        }
-      }
-    }
-
-    return { uploadedCover, uploadedGallery, uploadedPaths }
   }
 
   async function handleSubmit(submitEvent: React.FormEvent<HTMLFormElement>) {
@@ -333,10 +264,11 @@ export function EventForm({
 
     try {
       setProgressStage("uploading")
-      const uploadedImages = await uploadImages({
+      const uploadedImages = await uploadEventImages({
         eventId,
         cover: optimizedCoverFiles,
         gallery: optimizedGalleryFiles,
+        onProgress: setProgressDetail,
       })
       uploadedPaths.push(...uploadedImages.uploadedPaths)
 
@@ -394,8 +326,8 @@ export function EventForm({
 
     try {
       setProgressStage("optimizing")
-      const optimizedCoverFiles = await optimizeFiles(coverFiles)
-      const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
+      const { optimizedCoverFiles, optimizedGalleryFiles } =
+        await optimizeSelectedImages()
       const imageResult = await appendImageUrls({
         eventId,
         formData: imageFormData,
@@ -445,8 +377,8 @@ export function EventForm({
 
     try {
       setProgressStage("optimizing")
-      const optimizedCoverFiles = await optimizeFiles(coverFiles)
-      const optimizedGalleryFiles = await optimizeFiles(galleryFiles)
+      const { optimizedCoverFiles, optimizedGalleryFiles } =
+        await optimizeSelectedImages()
       const imageResult = await appendImageUrls({
         eventId: currentEvent.id,
         formData,

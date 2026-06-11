@@ -66,6 +66,25 @@ export async function getEventForForm(
   return data
 }
 
+async function getAdminEventStatusCounts(supabase: SupabaseClient) {
+  const [{ count: publishedEvents }, { count: archivedEvents }] =
+    await Promise.all([
+      supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published"),
+      supabase
+        .from("events")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "archived"),
+    ])
+
+  return {
+    archivedEvents: archivedEvents ?? 0,
+    publishedEvents: publishedEvents ?? 0,
+  }
+}
+
 export async function getAdminEventsPageData({
   status,
   supabase,
@@ -82,43 +101,20 @@ export async function getAdminEventsPageData({
     query = query.eq("status", status)
   }
 
-  const [
-    { data: events },
-    { count: publishedEvents },
-    { count: archivedEvents },
-  ] = await Promise.all([
+  const [{ data: events }, eventCounts] = await Promise.all([
     query.returns<AdminEventListItem[]>(),
-    supabase
-      .from("events")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published"),
-    supabase
-      .from("events")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "archived"),
+    getAdminEventStatusCounts(supabase),
   ])
 
   return {
-    archivedEvents: archivedEvents ?? 0,
     events: events ?? [],
-    publishedEvents: publishedEvents ?? 0,
+    ...eventCounts,
   }
 }
 
 export async function getAdminDashboardData(supabase: SupabaseClient) {
-  const [
-    { count: publishedEvents },
-    { count: archivedEvents },
-    { data: recentEvents },
-  ] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published"),
-    supabase
-      .from("events")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "archived"),
+  const [eventCounts, { data: recentEvents }] = await Promise.all([
+    getAdminEventStatusCounts(supabase),
     supabase
       .from("events")
       .select("id,title,status,city,starts_at")
@@ -128,8 +124,7 @@ export async function getAdminDashboardData(supabase: SupabaseClient) {
   ])
 
   return {
-    archivedEvents: archivedEvents ?? 0,
-    publishedEvents: publishedEvents ?? 0,
     recentEvents: recentEvents ?? [],
+    ...eventCounts,
   }
 }

@@ -11,14 +11,11 @@ type ImageSelectorProps = {
   accept?: string
   description?: string
   existingImages?: ExistingImage[]
-  existingInputName?: string
   label: string
   multiple?: boolean
   name?: string
   onExistingChange?: (urls: string[]) => void
   onFilesChange?: (files: File[]) => void
-  singleExistingUrlName?: string
-  singleKeepName?: string
 }
 
 type SelectedImage = {
@@ -87,14 +84,11 @@ export function ImageSelector({
   accept = defaultAccept,
   description,
   existingImages = [],
-  existingInputName,
   label,
   multiple = false,
   name,
   onExistingChange,
   onFilesChange,
-  singleExistingUrlName,
-  singleKeepName,
 }: ImageSelectorProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -228,31 +222,6 @@ export function ImageSelector({
           onChange={(event) => handleSelect(event.target.files)}
         />
       </div>
-
-      {singleExistingUrlName && existingImages[0] ? (
-        <input
-          type="hidden"
-          name={singleExistingUrlName}
-          value={existingImages[0].url}
-        />
-      ) : null}
-
-      {singleKeepName &&
-      existingImages[0] &&
-      keptExisting.has(existingImages[0].url) ? (
-        <input type="hidden" name={singleKeepName} value="true" />
-      ) : null}
-
-      {existingInputName
-        ? keptExistingUrls.map((url) => (
-            <input
-              key={url}
-              type="hidden"
-              name={existingInputName}
-              value={url}
-            />
-          ))
-        : null}
 
       {hasImages ? (
         <div className="grid gap-3 sm:grid-cols-2">

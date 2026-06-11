@@ -21,6 +21,7 @@ export async function getCategoriesWithEventCounts(supabase: SupabaseClient) {
       supabase
         .from("events")
         .select("category_id")
+        .eq("status", "published")
         .returns<Array<{ category_id: string }>>(),
     ]
   )
